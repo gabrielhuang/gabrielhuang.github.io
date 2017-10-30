@@ -4,8 +4,6 @@ title: Publications
 permalink: /publications/
 ---
 
-# Papers
-
 ## Generative Modeling
 
 **Adversarial Divergences are Good Task Losses for Generative Modeling** <br>
