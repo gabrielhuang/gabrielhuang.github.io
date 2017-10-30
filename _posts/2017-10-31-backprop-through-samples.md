@@ -5,21 +5,41 @@ title: Backpropagating through continuous and discrete samples
 
 > Keywords: reparametrization trick, Gumbel max trick, Gumbel softmax, Concrete distribution, score function estimator, REINFORCE
 
+## Goal
+
+There are many situations in machine learning where we are faced with minimizing a loss of the form:
+$$L(\theta, \phi) = \mathbf{E}_{x\sim p_\phi(x)}[f_{\theta}(x)]$$
+
+To minimize $L(\theta, \phi)$ using gradient descent, one has to compute the gradients $\nabla_{\theta} L(\theta, \phi)$ and $\nabla_{\phi} L(\theta, \phi)$.
+
+- The first gradient $\nabla_{\theta} L(\theta, \phi)$ can be estimated easily with Monte-Carlo. Indeed, under some weak assumptions, the expectation and gradient operators can be permuted and we have:
+$$\nabla_{\theta} L(\theta, \phi) = \nabla_{\theta}\mathbf{E}_{x\sim p_\phi(x)}[f_{\theta}(x)] =
+\mathbf{E}_{x\sim p_\phi(x)}[\nabla_{\theta} f_{\theta}(x)] \approx
+\frac{1}{|S|} \sum_{s=1}^S \nabla_{\theta} f_{\theta}(x^{(s)})$$
+where $x^{{(s)}}\sim p_\phi(x)$ are $S$ independent samples.
+- In general however, there is no obvious way to estimate the second gradient $\nabla_{\phi} L(\theta, \phi)$, because the distribution under which the expectation is taken depends on $\phi$.
+
+
+
+
 ## Motivation
 
 In the context of deep learning, we often want to **backpropagate a gradient through samples** $x\sim p_{\theta}(x)$, where $p_{\theta}(x)$ is a learned parametric distribution.
 
-For example we might want to **train a variational autoencoder**. Conditioned on the input $x$, the latent representation is not a single value but a distribution $$q_\phi(z|x)$$, generally a Gaussian distribution $$q_\phi(z|x)=\mathcal N(\mu_\phi(x), \Sigma_\phi(x))(z)$$ which parameters are given by a (inference) neural network of parameters $$\phi$$. When learning to maximize the likelihood of the data, we need to backpropagate the loss to the parameters $$\phi$$ of the inference network, across the distribution of $$z$$ or across samples $$z^{s}\sim p(z|x)$$.
+### Example
+Consider training a **variational autoencoder**. Conditioned on the input $x$, the latent representation is not a single value but a distribution $q_\phi(z|x)$, generally a Gaussian distribution
 
-TODO: talk about REINFORCE
+$$q_\phi(z|x)=\mathcal N(\mu_\phi(x), \Sigma_\phi(x))(z)$$
 
-## Goal
+where the mean and covariance are given by an inference network of parameters $\phi$. When training the VAE to maximize the (lower-bound on the) likelihood of the data, we need to backpropagate the loss to the parameters $\phi$ of the inference network.
 
-More specifically, we want to **minimize an expected cost**
-$$L(\theta, \phi) = \mathbf{E}_{x\sim p_\phi(x)}[f_{\theta}(x)]$$
-using gradient descent, which requires to compute the gradients $$\nabla_{\theta} L(\theta, \phi)$$ and $$\nabla_{\phi} L(\theta, \phi)$$.
+In other words, we need to backpropagate:
+- either through the approximate posterior distribution of $q_\phi(z|x)$
+- or through samples $z^{s}\sim q_\phi(z|x)$ from the approximate posterior distribution.
 
-### Computing $$\nabla_{\theta}\mathbf{E}_{x\sim p_\phi(x)}[f_{\theta}(x)] $$
+
+
+### Computing $\nabla_{\theta}\mathbf{E}_{x\sim p_\phi(x)}[f_{\theta}(x)]$
 
 Under certain conditions, Leibniz's rule states that the gradient and expectation can be swapped, resulting in
 
