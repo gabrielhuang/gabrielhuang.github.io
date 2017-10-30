@@ -15,9 +15,5 @@ Previously I did the [MVA Master's degree](http://www.math.ens-cachan.fr/version
 Email: [gabriel.huang@umontreal.ca](mailto:gabriel.huang@umontreal.ca)
 
 In person:
-```
-Office 3331,
-2920 Chemin de la Tour,
-Montréal, QC H3T 1N8
-Canada
-```
+
+<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2796.45052457134!2d-73.61796648443611!3d45.50100867910148!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4cc919f308df50f9%3A0x1c5cdca60001c62e!2sUniversit%C3%A9+de+Montr%C3%A9al+-+Pavillon+Andr%C3%A9-Aisenstadt!5e0!3m2!1sen!2sca!4v1509393414240" width="400" height="300" frameborder="0" style="border:0" allowfullscreen></iframe>
