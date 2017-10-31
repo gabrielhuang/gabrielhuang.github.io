@@ -3,7 +3,8 @@ layout: post
 title: Backpropagating through continuous and discrete samples
 ---
 
-> Keywords: reparametrization trick, Gumbel max trick, Gumbel softmax, Concrete distribution, score function estimator, REINFORCE
+<!-- > Keywords: reparametrization trick, Gumbel max trick, Gumbel softmax, Concrete distribution, score function estimator, REINFORCE
+-->
 
 ## Motivation and Problems
 
