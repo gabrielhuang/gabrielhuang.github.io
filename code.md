@@ -18,7 +18,7 @@ https://bit.ly/2EGWIKA
 Thanks to Alex, Akram, Aristide, David, Dendi, Eugene, Gabriel, 
 Jae, Joao, Liam, Rémi, Rosemary, Shawn, Sina, and Xing for writing all those samples!
 
-If you use the Thin-8 dataset, please cite our paper:
+If you use the Thin-8 dataset, please cite our [paper on parametric divergences](https://arxiv.org/abs/1708.02511):
 
 ```
 @article{huang2018parametric,
@@ -29,4 +29,4 @@ If you use the Thin-8 dataset, please cite our paper:
 }
 ```
 
-Among other interesting ideas, our paper explains the motivation in collecting Thin-8.
+Besides other interesting ideas, our paper explains the original motivation in collecting Thin-8.
