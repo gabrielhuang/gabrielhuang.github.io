@@ -12,8 +12,7 @@ The Thin-8 dataset consists of 1585 grayscale handwritten images of the digit 8,
 
 Thin-8 was collected in October 2017 at the [Montreal Institute for Learning Algorithms](https://mila.quebec)
 
-Download it here:
-https://bit.ly/2EGWIKA
+[Download it here](https://bit.ly/2EGWIKA)
 
 Thanks to Alex, Akram, Aristide, David, Dendi, Eugene, Gabriel, 
 Jae, Joao, Liam, Rémi, Rosemary, Shawn, Sina, and Xing for writing all those samples!
