@@ -9,6 +9,18 @@ permalink: /publications/
 **Parametric Adversarial Divergences are Good Task Losses for Generative Modeling** <br>
 Gabriel Huang, Hugo Berard, Ahmed Touati, Gauthier Gidel, Pascal Vincent, Simon Lacoste-Julien. <br>
 *Accepted as ICML'17 Workshop on Principled Approaches to Deep Learning.*<br>
-*Revised and Submitted to ICLR'18.* [[openreview]](https://openreview.net/forum?id=rkEtzzWAb&noteId=BkiY4k6rM) <br>
 *Accepted as ICLR'18 Workshop.*<br>
-[[arxiv]](https://arxiv.org/abs/1708.02511) [[preprint]](https://arxiv.org/pdf/1708.02511.pdf) [[poster]]({{ "/resources/icml17-poster.pdf" | absolute_url }})
+*Accepted at Montreal AI Symposium 2018.* (MAIS18)<br>
+[[arxiv]](https://arxiv.org/abs/1708.02511) [[poster]]({{ "/resources/icml17-poster.pdf" | absolute_url }}) [[openreview]](https://openreview.net/forum?id=rkEtzzWAb&noteId=BkiY4k6rM)
+
+**Scattering Networks for Hybrid Representation Learning** <br>
+Edouard Oyallon, Sergey Zagoruyko, Gabriel Huang, Nikos Komodakis,
+Simon Lacoste-Julien, Matthew Blaschko, Eugene Belilovsky.<br>
+*IEEE Transactions on Pattern Analysis and Machine Intelligence* (TPAMI)<br>
+[[paper]](https://hal.inria.fr/hal-01837587/file/main.pdf)
+
+## Optimization
+
+**Negative Momentum for Improved Game Dynamics** <br>
+Gauthier Gidel, Reyhane Askari Hemmat, Mohammad Pezeshki, Gabriel Huang, Rémi Lepriol, Simon Lacoste-Julien, Ioannis Mitliagkas.<br>
+[[arxiv]](https://arxiv.org/pdf/1807.04740.pdf)
