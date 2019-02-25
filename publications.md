@@ -7,7 +7,8 @@ permalink: /publications/
 ## Meta-Learning
 
 **Centroid Networks for Few-Shot Clustering and Unsupervised Few-Shot Classification** <br>
-Gabriel Huang, Hugo Larochelle, Simon Lacoste-Julien
+Gabriel Huang, Hugo Larochelle, Simon Lacoste-Julien<br>
+[[arxiv]](https://arxiv.org/abs/1902.08605)
 
 ## Generative Modeling
 
