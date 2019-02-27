@@ -8,7 +8,7 @@ permalink: /publications/
 
 **Centroid Networks for Few-Shot Clustering and Unsupervised Few-Shot Classification** <br>
 Gabriel Huang, Hugo Larochelle, Simon Lacoste-Julien<br>
-[[arxiv]](https://arxiv.org/abs/1902.08605)
+[[arxiv]](https://arxiv.org/abs/1902.08605) [[code]](https://github.com/gabrielhuang/centroid-networks) [[shortscience]](https://www.shortscience.org/paper?bibtexKey=journals/corr/1902.08605&a=gabriel)
 
 ## Generative Modeling
 
