@@ -4,6 +4,13 @@ title: Publications
 permalink: /publications/
 ---
 
+## Multimodal Video Captioning
+
+**Multimodal Pretraining for Dense Video Captioning**<br>
+Gabriel Huang, Bo Pang, Zhenhai Zhu, Clara Rivera, Radu Soricut<br>
+*To appear in AACL-IJCNLP 2020.*<br>
+
+
 ## Meta-Learning
 
 **Centroid Networks for Few-Shot Clustering and Unsupervised Few-Shot Classification** <br>
