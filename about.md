@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-Hi! My name is Gabriel (Buo-Xuan) Huang and I am doing a PhD in machine learning, at the [Montreal Institute for Learning Algorithms](https://mila.quebec/en/). My supervisor is [Simon Lacoste-Julien](http://www.iro.umontreal.ca/~slacoste/).
+My name is Gabriel (Buo-Xuan) Huang and I am doing a PhD in machine learning, at the [Montreal Institute for Learning Algorithms](https://mila.quebec/en/). My supervisor is [Simon Lacoste-Julien](http://www.iro.umontreal.ca/~slacoste/).
 
 I am interested in generative learning, latent-variable models, structured prediction, optimal transport, weakly-supervised learning, reinforcement learning, convex optimization, music generation, and fundamental questions of optimization and statistical learning.
 
