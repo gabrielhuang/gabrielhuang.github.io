@@ -14,4 +14,6 @@ Previously I did the [MVA Master's degree](http://www.math.ens-cachan.fr/version
 
 Email: [gabriel.huang@umontreal.ca](mailto:gabriel.huang@umontreal.ca)
 
-In person: Mila, 6666 Rue Saint-Urbain, Montréal, QC H2S 3H1.
+In person: Mila, 6666 St-Urbain, #200, Montreal, QC, H2S 3H1, Canada
+
+
