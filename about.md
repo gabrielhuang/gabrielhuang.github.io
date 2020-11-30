@@ -15,7 +15,7 @@ Previously I did the [MVA Master's degree](http://www.math.ens-cachan.fr/version
 
 **Multimodal Pretraining for Dense Video Captioning**<br>
 Gabriel Huang, Bo Pang, Zhenhai Zhu, Clara Rivera, Radu Soricut<br>
-*To appear in AACL-IJCNLP 2020.*<br>
+*AACL-IJCNLP 2020.*<br>
 [[arxiv]](https://arxiv.org/abs/2011.11760) [[dataset]](https://github.com/google-research-datasets/Video-Timeline-Tags-ViTT) [[presentation]](http://www.aacl2020virtualconference.org/paper_275.html) [[slides]](https://docs.google.com/presentation/d/13xu7UxdRHawI2lmgb8YF74SJ-g5VWtTF7mo5LqBwOv0/edit?usp=sharing)
 
 **Centroid Networks for Few-Shot Clustering and Unsupervised Few-Shot Classification** <br>
