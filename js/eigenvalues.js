@@ -525,26 +525,21 @@ $(document).ready(function(){
     $('.info').fadeOut();
   }, 500);
 
-  tp.touchpad.on("mousemove", function() {
-    var coords = d3.mouse(this);
-    x = tp.xRevScale(coords[0]);
-    y = tp.yRevScale(coords[1]);
+  function touch_or_mouse_move(X, Y) {
+      x = tp.xRevScale(X);
+      y = tp.yRevScale(Y);
 
-    var lr = y;
-    var beta = x;
-    //console.log('Lr',lr);
-    //console.log('Beta',beta);
-    replot(eigs, lr, beta, blob);
-    refresh_touchpad(tp, lr, beta);
-
-
-  });
-
+      var lr = y;
+      var beta = x;
+      //console.log('Lr',lr);
+      //console.log('Beta',beta);
+      replot(eigs, lr, beta, blob);
+      refresh_touchpad(tp, lr, beta);
+  }
 
   var touchpad_activated = false;
-  $('.touchpad').on("mouseover", function() {
+  function activate_touchpad() {
     // first time only
-
     if(touchpad_activated)
       return;
     touchpad_activated = true;
@@ -557,6 +552,28 @@ $(document).ready(function(){
     $('.lr_bar_negative').fadeIn();
     $('.beta_bar_positive').fadeIn();
     $('.beta_bar_negative').fadeIn();
+  }
+
+  tp.touchpad.on("mousemove", function() {
+    var coords = d3.mouse(this);
+    touch_or_mouse_move(coords[0], coords[1]);
+  });
+
+  tp.touchpad.on('touchmove', function() {
+    d3.event.preventDefault();
+    var coords = d3.touches(this)[0];
+    console.log(coords);
+    touch_or_mouse_move(coords[0], coords[1]);
+  });
+
+
+  $('.touchpad').on("mouseover", function() {
+    activate_touchpad();
+  });
+
+  $('.touchpad')[0].addEventListener('touchstart', function(event) {
+    console.log('touchstart');
+    activate_touchpad();
   });
 
 });
