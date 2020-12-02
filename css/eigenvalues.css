@@ -1,0 +1,92 @@
+svg {
+  background-color: white;
+}
+
+.nm-span {
+  font-family: Verdana, sans-serif;
+}
+
+.b {
+  font-weight: bold;
+}
+
+.touchpad {
+  background-color: #ffc;
+}
+
+.bar_positive {
+  background-color: green;
+}
+
+.bar_negative {
+  background-color: red;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.unitCircle {
+  fill: rgba(0, 255, 0, 0.5);
+  stroke: black;
+  stroke-width: 2;
+  opacity: 1.;
+}
+
+.convergenceCircle {
+  fill: none;
+  stroke: purple;
+  stroke-width: 2;
+  stroke-dasharray: 10 5;
+}
+
+.shiftedConvergenceCircle {
+  fill: none;
+  stroke: navy;
+  stroke-width: 2;
+  stroke-dasharray: 10 5;
+}
+
+.eigenValue {
+  fill: purple;
+  stroke: white;
+  stroke-width: 2;
+}
+
+.shiftedEigenValue {
+  fill: navy;
+  stroke: white;
+  stroke-width: 2;
+}
+
+.eigenValueTrace {
+  fill: purple;
+  opacity: 0.1;
+}
+
+.shiftedEigenValueTrace {
+  fill: navy;
+  opacity: 0.1;
+}
+
+.sgd {
+  color: purple;
+}
+.sgdmomentum {
+  color: navy;
+}
+
+.chart .eigenDirection {
+  stroke: blue;
+  stroke-width: 2;
+}
+
+.box {
+  font-family: "Lucida Console", Monaco, monospace;
+}

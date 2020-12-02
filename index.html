@@ -12,13 +12,16 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   <link rel="stylesheet" href="main.css">
 
+  <!-- Negative Momentum -->
+  <link rel="stylesheet" type="text/css" href="css/eigenvalues.css">
+  <link rel="stylesheet"  type="text/css" href="css/colors.css">
   <title>Gabriel Huang</title>
 </head>
 <body>
 
   <!-- Optional JavaScript -->
   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="js/jquery-3.5.1.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
@@ -57,6 +60,47 @@
           human activity recognition using RGB-D cameras and on recommender systems.
         </p>
 
+
+        <!-- Negative momentum -->
+        <script src="js/d3.v5.min.js"></script>
+        <script src="js/math.min.js"></script>
+        <script src="js/eigenvalues.js"></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=TeX-MML-AM_CHTML' async></script>
+
+        <h4> <a name="negative_momentum">Negative Momentum</a> </h4>
+
+        <p>Below is an interactive visualization of our paper <a href="#negative_momentum_paper">Negative Momentum for Improved Game Dynamics</a>:<br>
+        (a) Learning rate (<b>lr</b>) and momentum (<b>beta</b>) hyperparameters.<br>
+        (b) Resulting eigenvalues in the complex plane for <u class="sgd">SGD</u> and <u class="sgdmomentum">SGD+momentum</u>. </p>
+        <p>There is convergence if and only if all eigenvalues are inside the convergence ball (green). <br>Try to find the hyperparameters for convergence.</p>
+
+        <div style="text-align:center">
+          <div style="text-align:center; display:inline-block">
+            <svg class="touchpad">
+              <p>(a) Hyperparameters.
+            </svg>
+          </div>
+          <div style="text-align:center; display:inline-block;">
+            <svg class="chart">
+              <p>(b) Eigenvalues in complex plane.
+            </svg>
+          </div>
+
+
+
+        </div>
+
+        <h5></h5>
+
+
+        <p><u class="sgd">SGD without momentum:</u> using <span class="snm-span p_lr b"></span>,
+        eigenvalues are <span class="p_sgd_inside b"></span> the convergence ball &rarr;  <span class="b p_sgd_converges"></span><br>
+
+        <u class="sgdmomentum">SGD with momentum:</u> using <span class="snm-span p_lr b"></span>
+        and <span class="p_sign_beta b"></span> momentum <span class="p_beta b"></span>,
+        eigenvalues are <span class="p_momentum_inside b"></span> the convergence ball &rarr; <span class="b p_momentum_converges"></span> </p>
+
+
         <h4> <a name="publications">Publications and preprints</a> </h4>
 
         <p>
@@ -88,7 +132,7 @@
 
             <li>
               <span class="badge badge-success">paper</span>
-              <span class="pt">Negative Momentum for Improved Game Dynamics</span> <br>
+              <span class="pt"><a name="negative_momentum_paper">Negative Momentum for Improved Game Dynamics</a></span> <br>
               Gauthier Gidel, Reyhane Askari Hemmat, Mohammad Pezeshki, Gabriel Huang, Rémi Lepriol, Simon Lacoste-Julien, Ioannis Mitliagkas.<br>
               AISTATS 2019<br>
               <div class="btn-group" >
