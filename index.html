@@ -124,11 +124,11 @@
                   } else {
                     // side by side
                     $('.papers .img').css('float', 'left');
-                    $('.papers .text').css('width', '400px');
+                    $('.papers .text').css('width', ($('.papers').width() - 250) + 'px');
                   }
                 }
                 </script>
-                <p>
+
                   <div class="papers">
                     <div>
                       <div class="img">
@@ -207,8 +207,9 @@
                       </div>
                     </div>
                   </div>
-                </p>
 
+                <p>final text</p>
+                <br>
                 <h4><a name="thin">Thin-8 dataset</a></h4>
 
                 <p>The Thin-8 dataset consists of <b>1585</b> grayscale handwritten images of the digit 8, with resolution 512x512.<br>
