@@ -15,6 +15,7 @@ pre code {
 
 .papers > div {
   margin-bottom: 2em;
+  clear: both;
 }
 
 .papers .img {
