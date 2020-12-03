@@ -15,7 +15,9 @@
   <link rel="stylesheet" type="text/css" href="css/eigenvalues.css">
   <link rel="stylesheet"  type="text/css" href="css/colors.css">
   <link rel="stylesheet" type="text/css" href="main.css">
-
+  <link rel="icon"
+  type="image/png"
+  href="img/favico.png">
 
   <title>Gabriel Huang</title>
 </head>
@@ -105,13 +107,34 @@
 
                 <h4> <a name="publications">Publications and preprints</a> </h4>
 
+                <script>
+                $(document).ready(function(){
+                  on_resize();
+                })
 
+                $(window).resize(function(){
+                  on_resize();
+                });
+
+                function on_resize() {
+                  if ($('.papers').width() < 600) {
+                    // image on top
+                    $('.papers .img').css('float', 'none');
+                    $('.papers .text').css('width', '100%');
+                  } else {
+                    // side by side
+                    $('.papers .img').css('float', 'left');
+                    $('.papers .text').css('width', '400px');
+                  }
+                }
+                </script>
                 <p>
-                  <ul class="papers">
-
-                    <li>
-                      <img src="img/multimodal-pretraining.jpg">
-                      <div>
+                  <div class="papers">
+                    <div>
+                      <div class="img">
+                        <img src="img/multimodal-pretraining.jpg">
+                      </div>
+                      <div class="text">
                         <span class="badge badge-success">paper</span>
                         <span class="pt">Multimodal Pretraining for Dense Video Captioning</span> <br>
                         Gabriel Huang, Bo Pang, Zhenhai Zhu, Clara Rivera, Radu Soricut<br>
@@ -123,11 +146,12 @@
                           <a class="btn btn-outline-secondary btn-sm" href="https://docs.google.com/presentation/d/13xu7UxdRHawI2lmgb8YF74SJ-g5VWtTF7mo5LqBwOv0/edit?usp=sharing" role="button">slides</a>
                         </div>
                       </div>
-                    </li>
-
-                    <li>
-                      <img src="img/centroid.jpg">
-                      <div>
+                    </div>
+                    <div>
+                      <div class="img">
+                        <img src="img/centroid.jpg">
+                      </div>
+                      <div class="text">
                         <span class="badge badge-secondary">arXiv</span>
                         <span class="pt">Are Few-shot Learning Benchmarks too Simple?</span> <br>
                         Gabriel Huang, Hugo Larochelle, Simon Lacoste-Julien<br>
@@ -137,11 +161,12 @@
                           <a class="btn btn-outline-secondary btn-sm" href="https://github.com/gabrielhuang/centroid-networks" role="button">code</a>
                         </div>
                       </div>
-                    </li>
-
-                    <li>
-                      <img src="img/negative-momentum.jpg">
-                      <div>
+                    </div>
+                    <div>
+                      <div class="img">
+                        <img src="img/negative-momentum.jpg">
+                      </div>
+                      <div class="text">
                         <span class="badge badge-success">paper</span>
                         <span class="pt"><a name="negative_momentum_paper">Negative Momentum for Improved Game Dynamics</a></span> <br>
                         Gauthier Gidel, Reyhane Askari Hemmat, Mohammad Pezeshki, Gabriel Huang, Rémi Lepriol, Simon Lacoste-Julien, Ioannis Mitliagkas.<br>
@@ -151,11 +176,12 @@
                           <a class="btn btn-outline-secondary btn-sm" href="#negative_momentum_visualization" role="button">visualization</a>
                         </div>
                       </div>
-                    </li>
-
-                    <li>
-                      <img src="img/parametric.jpg">
-                      <div>
+                    </div>
+                    <div>
+                      <div class="img">
+                        <img src="img/parametric.jpg">
+                      </div>
+                      <div class="text">
                         <span class="badge badge-secondary">arXiv</span>
                         <span class="pt">Parametric Adversarial Divergences are Good Task Losses for Generative Modeling</span> <br>
                         Gabriel Huang, Hugo Berard, Ahmed Touati, Gauthier Gidel, Pascal Vincent, Simon Lacoste-Julien. <br>
@@ -164,11 +190,12 @@
                           <a class="btn btn-outline-secondary btn-sm" href="https://openreview.net/forum?id=rkEtzzWAb&noteId=BkiY4k6rM" role="button">openreview</a>
                         </div>
                       </div>
-                    </li>
-
-                    <li>
-                      <img src="img/scattering.jpg">
-                      <div>
+                    </div>
+                    <div>
+                      <div class="img">
+                        <img src="img/scattering.jpg">
+                      </div>
+                      <div class="text">
                         <span class="badge badge-success">paper</span>
                         <span class="pt">Scattering Networks for Hybrid Representation Learning</span> <br>
                         Edouard Oyallon, Sergey Zagoruyko, Gabriel Huang, Nikos Komodakis,
@@ -178,8 +205,8 @@
                           <a class="btn btn-outline-secondary btn-sm" href="https://hal.inria.fr/hal-01837587/file/main.pdf">paper</a>
                         </div>
                       </div>
-                    </li>
-                  </ul>
+                    </div>
+                  </div>
                 </p>
 
                 <h4><a name="thin">Thin-8 dataset</a></h4>
@@ -198,24 +225,23 @@
                     author={Huang, Gabriel and Berard, Hugo and Touati, Ahmed and Gidel, Gauthier and Vincent, Pascal and Lacoste-Julien, Simon},
                     journal={arXiv preprint arXiv:1708.02511},
                     year={2017}
-                  }
-                </code></pre>
+                  }</code></pre>
 
-                <p>Thanks to Alex, Akram, Aristide, David, Dendi, Eugene,
-                  Jae, Joao, Liam, Rémi, Rosemary, Shawn, Sina, and Xing for scribbling all those samples!</p>
+                  <p>Thanks to Alex, Akram, Aristide, David, Dendi, Eugene,
+                    Jae, Joao, Liam, Rémi, Rosemary, Shawn, Sina, and Xing for scribbling all those samples!</p>
 
-                  <h4>Contact</h4>
+                    <h4>Contact</h4>
 
-                  <p>Email: <a href="mailto:gabriel.huang@umontreal.ca">gabriel.huang@umontreal.ca</a><br>
-                    In person: Mila, 6666 St-Urbain, #200, Montreal, QC, H2S 3H1, Canada
-                  </p>
+                    <p>Email: <a href="mailto:gabriel.huang@umontreal.ca">gabriel.huang@umontreal.ca</a><br>
+                      In person: Mila, 6666 St-Urbain, #200, Montreal, QC, H2S 3H1, Canada
+                    </p>
 
-                </div>
-
+                  </div>
 
 
 
 
 
-              </body>
-              </html>
+
+                </body>
+                </html>
