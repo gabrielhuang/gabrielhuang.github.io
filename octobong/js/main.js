@@ -24,8 +24,8 @@ const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerH
 //camera.position.y = 5; // Set camera position
 
 camera.position.x = 10; // Set camera position
-camera.position.y = 0; // Set camera position
-camera.position.z = 10   ; // Set camera position
+camera.position.y = 5; // Set camera position
+camera.position.z = 0;   ; // Set camera position
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -74,8 +74,8 @@ geom.faces.push( new THREE.Face3( 0, 1, 2 ) );
 function get_ith_coords(i, offset, height) {
     var coords = {};
     coords.x = octobong_radius * Math.cos(2*Math.PI * i/ octobong_sides + offset);
-    coords.y = octobong_radius * Math.sin(2*Math.PI * i / octobong_sides + offset);
-    coords.z = height;
+    coords.z = octobong_radius * Math.sin(2*Math.PI * i / octobong_sides + offset);
+    coords.y = height;
     return new THREE.Vector3(coords.x, coords.y, coords.z);
 }
 
@@ -86,29 +86,29 @@ for(var i=0; i<8; i++) {
     geom.vertices.push(new THREE.Vector3(0,0,0));
     geom.vertices.push(get_ith_coords(i, 0, 0));
     geom.vertices.push(get_ith_coords(i+1, 0, 0));
-    geom.faces.push( new THREE.Face3( l, l+2, l+1) );
+    geom.faces.push( new THREE.Face3( l, l+1, l+2) );
 }
 geom.computeFaceNormals();
 
 var boxMaterial = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
-var object = new THREE.Mesh( geom, boxMaterial );
-scene.add(object);
+var bong_bottom = new THREE.Mesh( geom, boxMaterial );
+scene.add(bong_bottom);
 
 // Top plate
 var geom = new THREE.Geometry(); 
 for(var i=0; i<8; i++) {
     var l = geom.vertices.length;
-    geom.vertices.push(new THREE.Vector3(0,0,octobong_height));
+    geom.vertices.push(new THREE.Vector3(0,octobong_height,0));
     geom.vertices.push(get_ith_coords(i, octobong_offset*octobong_levels, octobong_height));
     geom.vertices.push(get_ith_coords(i+1, octobong_offset*octobong_levels, octobong_height));
-    geom.faces.push( new THREE.Face3( l, l+1, l+2) );
+    geom.faces.push( new THREE.Face3( l, l+2, l+1) );
 }
 var boxMaterial = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
 geom.computeFaceNormals();
 
 //boxMaterial = new THREE.MeshPhongMaterial({color: '#CA8'}); // Define material // Simple white box
-var object = new THREE.Mesh( geom, boxMaterial );
-scene.add(object);
+var bong_top = new THREE.Mesh( geom, boxMaterial );
+scene.add(bong_top);
 
 
 // Mesh sides
@@ -129,10 +129,19 @@ for(var level=0; level<octobong_levels; level++) {
         var j = level*octobong_sides+((side+1) % octobong_sides);
         var I = (level+1)*octobong_sides+((side+0) % octobong_sides);
         var J = (level+1)*octobong_sides+((side+1) % octobong_sides);
-        geom.faces.push(new THREE.Face3(i, J, I));
-        geom2.faces.push(new THREE.Face3(i, j, J));
+        geom.faces.push(new THREE.Face3(i, I, J));
+        geom2.faces.push(new THREE.Face3(i, J, j));
     }
 }
+
+var edges = new THREE.EdgesGeometry( geom );
+var bong_side1_wires = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+scene.add( bong_side1_wires );
+
+var edges = new THREE.EdgesGeometry( geom2 );
+var bong_side2_wires = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+scene.add( bong_side2_wires );
+
 
 const map3 = loader.load( '../assets/hepatica_dxt3_mip.dds' );
 map3.anisotropy = 4;
@@ -151,10 +160,10 @@ var boxMaterial2 = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3
 geom.computeFaceNormals();
 geom2.computeFaceNormals();
 
-var object = new THREE.Mesh( geom, boxMaterial );
-var object2 = new THREE.Mesh( geom2, boxMaterial2 );
-scene.add(object);
-scene.add(object2);
+var bong_side1 = new THREE.Mesh( geom, boxMaterial );
+var bong_side2 = new THREE.Mesh( geom2, boxMaterial2 );
+scene.add(bong_side1);
+scene.add(bong_side2);
 
 
 
@@ -166,7 +175,7 @@ const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, s
 const sphereMat = new THREE.MeshPhongMaterial({color: '#CA8'});
 const mesh = new THREE.Mesh(sphereGeo, sphereMat);
 mesh.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
-scene.add(mesh);
+//scene.add(mesh);
 
 
 // light gui
@@ -184,24 +193,47 @@ class ColorGUIHelper {
   }
 
 
-  var color = 0x00FFFF;
-  var intensity = 0.0;
-  var light = new THREE.AmbientLight(color, intensity);
-  scene.add(light);
+  /*
+var color = 0x00FFFF;
+var intensity = 0.3;
+var light = new THREE.AmbientLight(color, intensity);
+scene.add(light);
+*/
 
-  
 
-var color = 0xffcccc;
-var intensity = 0.5;
+var color = 0xffffff;
+var intensity = 1.;
 var light = new THREE.DirectionalLight(color, intensity);
-light.position.set(0, 0, 10);
-light.target.position.set(0, 0, 0);
+light.position.set(10, 0, 0);
+light.target.position.set(0, octobong_height/2, 0);
 scene.add(light);
 scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
 scene.add(helper);
 
 
+var color = 0xddddff;
+var intensity = 0.5;
+var light = new THREE.DirectionalLight(color, intensity);
+light.position.set(0, 0, 10);
+light.target.position.set(0, octobong_height/2, 0);
+scene.add(light);
+scene.add(light.target);
+var helper = new THREE.DirectionalLightHelper(light);
+scene.add(helper);
+
+
+var color = 0xffdddd;
+var intensity = 0.5;
+var light = new THREE.DirectionalLight(color, intensity);
+light.position.set(0, 0, -10);
+light.target.position.set(0, octobong_height/2, 0);
+scene.add(light);
+scene.add(light.target);
+var helper = new THREE.DirectionalLightHelper(light);
+scene.add(helper);
+
+/*
 var color = 0xffccff;
 var intensity = 0.5;
 var light = new THREE.DirectionalLight(color, intensity);
@@ -211,7 +243,7 @@ scene.add(light);
 scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
 scene.add(helper);
-
+*/
 
 /*
 var color = 0xccffcc;
@@ -225,19 +257,36 @@ scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
 scene.add(helper);
 */
+
+/*
 const gui = new GUI();
 gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color');
 gui.add(light, 'intensity', 0, 2, 0.01);
 gui.add(light.target.position, 'x', -10, 10, .01);
 gui.add(light.target.position, 'z', -10, 10, .01);
 gui.add(light.target.position, 'y', 0, 10, .01);
-
+*/
 
 
 //Trackball Controls for Camera 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0, 0);
+controls.target.set(0, octobong_height/2, 0);
 controls.update();
+
+// axes helper
+const axesHelper = new THREE.AxisHelper( 5 );
+scene.add( axesHelper );
+
+
+var pivot = new THREE.Group();
+pivot.add( bong_side1 );
+pivot.add( bong_side2 );
+pivot.add( bong_top);
+pivot.add( bong_bottom);
+pivot.add( bong_side1_wires);
+pivot.add( bong_side2_wires);
+scene.add(pivot);
+//side1.position.set( 0, ); // the negative of the group's center
 
 
 
@@ -251,17 +300,12 @@ const rendering = function() {
     controls.update();
 
     theta += 0.01;
-    light.position.x = 3*Math.cos(theta);
-    light.position.y = 3*Math.sin(theta);
-    light.position.z = -10;
-    light.target.position.x = 10;
-    light.target.position.y = 0;
-    light.target.position.z = 0;  
+
 
     // Constantly rotate box
-    scene.rotation.z += 0.005;
-    scene.rotation.x = Math.PI/2;
-
+    //scene.rotation.z += 0.005;
+    //scene.rotation.x = Math.PI/2;
+    pivot.rotation.y = theta;
 
     renderer.render(scene, camera);
 }
