@@ -20,13 +20,13 @@ const octobong_offset = 0.35 * Math.PI;
 const scene = new THREE.Scene();
 
 // Camera
-const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.6, 1200);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.6, 1200);
 ///camera.position.x = -4*octobong_radius; // Set camera position
 //camera.position.y = 5; // Set camera position
 
-camera.position.x = 10; // Set camera position
-camera.position.y = 5; // Set camera position
-camera.position.z = 0;   ; // Set camera position
+camera.position.x = 3; // Set camera position
+camera.position.y = 3; // Set camera position
+camera.position.z = 3;   ; // Set camera position
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({antialias: true});
