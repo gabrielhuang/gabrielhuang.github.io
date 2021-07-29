@@ -1,8 +1,10 @@
 
 // The import statements look different as they are imported via CDNs here to ensure the Three.js library works properly with codepen.io
-import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r122/examples/jsm/controls/OrbitControls.js';
 import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
-import { DDSLoader } from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/loaders/DDSLoader.js';
+import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+// doesn't work
+// import { MeshLine, MeshLineMaterial, MeshLineRaycast } from '../node_modules/three.meshline/src/THREE.MeshLine.js';
 
 
 // Constants
@@ -12,7 +14,6 @@ const octobong_height = 2.;
 const octobong_levels = 3.;
 const octobong_offset = 0.35 * Math.PI;
 
-const loader = new DDSLoader();
 
 
 // Scene
@@ -40,142 +41,108 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix(); // Apply changes
 })
 
-// Create box:
-const boxGeometry = new THREE.BoxGeometry(2, 2, 2); // Define geometry
-var boxMaterial = new THREE.MeshBasicMaterial({color: 0x00FF00}); // Define material // Simple white box
-//const boxMaterial = new THREE.MeshLambertMaterial({color: 0xFFFFFF}); // Define material // Simple white box
-const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial); // Build box
-boxMesh.rotation.set(40, 0, 40); // Set box initial rotation
-//scene.add(boxMesh); // Add box to canvas
 
-console.log(boxGeometry);
+// Top plate
+class Autogeometry {
+    constructor() {
+        this.geometry = new THREE.BufferGeometry();
+        this.vertices = [];
+    }
+    
+    push_face_coords(v1, v2, v3) {
+            this.vertices.push(v1[0]);
+            this.vertices.push(v1[1]);
+            this.vertices.push(v1[2]);
 
-// Create other surfaces
+            this.vertices.push(v2[0]);
+            this.vertices.push(v2[1]);
+            this.vertices.push(v2[2]);
 
-// Octobong Base
+            this.vertices.push(v3[0]);
+            this.vertices.push(v3[1]);
+            this.vertices.push(v3[2]);
+        }
 
-// R
+    get_geometry() {
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.vertices), 3));
+        //this.geometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(this.normals), 3));
+        //this.geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(this.uvs), 2));
 
+        // set the faces
+        this.geometry.computeVertexNormals();
 
+        return this.geometry;
+    }
 
+    get_mesh_and_register(material) {
+        this.mesh = new THREE.Mesh(this.get_geometry(), material);
+        scene.add(this.mesh);
+        return this.mesh;
+    }
+}
 
-/*
-var v1 = new THREE.Vector3(0,0,0);
-var v2 = new THREE.Vector3(0,500,0);
-var v3 = new THREE.Vector3(0,500,500);
+function assert(condition, message) {
+    if (!condition) {
+        throw message || "Assertion failed";
+    }
+}
 
-geom.vertices.push(v1);
-geom.vertices.push(v2);
-geom.vertices.push(v3);
-
-geom.faces.push( new THREE.Face3( 0, 1, 2 ) );
-*/
-
-function get_ith_coords(i, offset, height) {
+function get_ith_coords(i, level) {
     var coords = {};
+    assert (level>=0 && level <= octobong_levels, "get_ith_coords: Level out of range: " + level);
+    const offset = level * octobong_offset;
+    const height = level * octobong_height / octobong_levels;
+    i = i % octobong_sides;
     coords.x = octobong_radius * Math.cos(2*Math.PI * i/ octobong_sides + offset);
     coords.z = octobong_radius * Math.sin(2*Math.PI * i / octobong_sides + offset);
     coords.y = height;
-    return new THREE.Vector3(coords.x, coords.y, coords.z);
+    return [coords.x, coords.y, coords.z];
 }
+
+const bong_material = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
 
 // Bottom plate
-var geom = new THREE.Geometry(); 
+const geometry_bottom = new Autogeometry();
 for(var i=0; i<8; i++) {
-    var l = geom.vertices.length;
-    geom.vertices.push(new THREE.Vector3(0,0,0));
-    geom.vertices.push(get_ith_coords(i, 0, 0));
-    geom.vertices.push(get_ith_coords(i+1, 0, 0));
-    geom.faces.push( new THREE.Face3( l, l+1, l+2) );
+    geometry_bottom.push_face_coords([0,0,0], get_ith_coords(i, 0), get_ith_coords(i+1, 0));
 }
-geom.computeFaceNormals();
-
-var boxMaterial = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
-var bong_bottom = new THREE.Mesh( geom, boxMaterial );
-scene.add(bong_bottom);
+const bong_bottom = geometry_bottom.get_mesh_and_register(bong_material);
 
 // Top plate
-var geom = new THREE.Geometry(); 
+const geometry_top = new Autogeometry();
 for(var i=0; i<8; i++) {
-    var l = geom.vertices.length;
-    geom.vertices.push(new THREE.Vector3(0,octobong_height,0));
-    geom.vertices.push(get_ith_coords(i, octobong_offset*octobong_levels, octobong_height));
-    geom.vertices.push(get_ith_coords(i+1, octobong_offset*octobong_levels, octobong_height));
-    geom.faces.push( new THREE.Face3( l, l+2, l+1) );
+    geometry_top.push_face_coords(
+        [0, octobong_height, 0], 
+        get_ith_coords(i+1, octobong_levels),
+        get_ith_coords(i, octobong_levels)
+    );
 }
-var boxMaterial = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
-geom.computeFaceNormals();
+const bong_top = geometry_top.get_mesh_and_register(bong_material);
 
-//boxMaterial = new THREE.MeshPhongMaterial({color: '#CA8'}); // Define material // Simple white box
-var bong_top = new THREE.Mesh( geom, boxMaterial );
-scene.add(bong_top);
-
-
-// Mesh sides
-var geom = new THREE.Geometry(); 
-var geom2 = new THREE.Geometry(); 
+// Mesh sides 
+const geometry_side = new Autogeometry();
 var level = 1;
-for(var level=0; level<=octobong_levels; level++) {
-    for(var side=0; side<octobong_sides; side++) {
-        geom.vertices.push(get_ith_coords(side, octobong_offset*level, octobong_height / octobong_levels * level))
-        geom2.vertices.push(get_ith_coords(side, octobong_offset*level, octobong_height / octobong_levels * level))
-    }
-}
-
 for(var level=0; level<octobong_levels; level++) {
     for(var side=0; side<octobong_sides; side++) {
-        // Side 1
-        var i = level*octobong_sides+((side+0) % octobong_sides);
-        var j = level*octobong_sides+((side+1) % octobong_sides);
-        var I = (level+1)*octobong_sides+((side+0) % octobong_sides);
-        var J = (level+1)*octobong_sides+((side+1) % octobong_sides);
-        geom.faces.push(new THREE.Face3(i, I, J));
-        geom2.faces.push(new THREE.Face3(i, J, j));
+        geometry_side.push_face_coords(
+            get_ith_coords(side, level),
+            get_ith_coords(side, level+1),
+            get_ith_coords(side+1, level+1)     
+        );
+        geometry_side.push_face_coords(
+            get_ith_coords(side, level),
+            get_ith_coords(side+1, level+1),
+            get_ith_coords(side+1, level),
+        );
     }
 }
+const bong_side = geometry_side.get_mesh_and_register(bong_material);
 
-var edges = new THREE.EdgesGeometry( geom );
-var bong_side1_wires = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
-scene.add( bong_side1_wires );
+// Add edges
+const geometry_side_wires = new THREE.EdgesGeometry( geometry_side.get_geometry() );
+const bong_side_wires = new THREE.LineSegments(geometry_side_wires, new THREE.LineBasicMaterial( { 	color: 0xff0000 } ) );
+scene.add(bong_side);
 
-var edges = new THREE.EdgesGeometry( geom2 );
-var bong_side2_wires = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
-scene.add( bong_side2_wires );
-
-
-const map3 = loader.load( '../assets/hepatica_dxt3_mip.dds' );
-map3.anisotropy = 4;
-
-//var boxMaterial = new THREE.MeshPhongMaterial({color: '#CA8'});
-//var boxMaterial2 = new THREE.MeshPhongMaterial({color: '#CA8'});
-
-var boxMaterial = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
-var boxMaterial2 = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
-
-
-//var boxMaterial = new THREE.MeshBasicMaterial( { map: map3, alphaTest: 0.5 } );
-//var boxMaterial2 = new THREE.MeshBasicMaterial( { map: map3, alphaTest: 0.5 } );
-////var boxMaterial = new THREE.MeshBasicMaterial({color: 0x00bc00}); // green Define material // Simple white box
-//var boxMaterial2 = new THREE.MeshBasicMaterial({color: 0x0000bc}); // blue Define material // Simple white box
-geom.computeFaceNormals();
-geom2.computeFaceNormals();
-
-var bong_side1 = new THREE.Mesh( geom, boxMaterial );
-var bong_side2 = new THREE.Mesh( geom2, boxMaterial2 );
-scene.add(bong_side1);
-scene.add(bong_side2);
-
-
-
-// sphere
-const sphereRadius = 3;
-const sphereWidthDivisions = 32;
-const sphereHeightDivisions = 16;
-const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
-const sphereMat = new THREE.MeshPhongMaterial({color: '#CA8'});
-const mesh = new THREE.Mesh(sphereGeo, sphereMat);
-mesh.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
-//scene.add(mesh);
 
 
 // light gui
@@ -193,12 +160,11 @@ class ColorGUIHelper {
   }
 
 
-  /*
-var color = 0x00FFFF;
-var intensity = 0.3;
+  
+var color = 0x00F0dd;
+var intensity = 0.5;
 var light = new THREE.AmbientLight(color, intensity);
 scene.add(light);
-*/
 
 
 var color = 0xffffff;
@@ -274,17 +240,15 @@ controls.target.set(0, octobong_height/2, 0);
 controls.update();
 
 // axes helper
-const axesHelper = new THREE.AxisHelper( 5 );
+const axesHelper = new THREE.AxesHelper( 5 );
 scene.add( axesHelper );
 
 
 var pivot = new THREE.Group();
-pivot.add( bong_side1 );
-pivot.add( bong_side2 );
+pivot.add( bong_side );
 pivot.add( bong_top);
 pivot.add( bong_bottom);
-pivot.add( bong_side1_wires);
-pivot.add( bong_side2_wires);
+pivot.add( bong_side_wires);
 scene.add(pivot);
 //side1.position.set( 0, ); // the negative of the group's center
 
@@ -299,7 +263,7 @@ const rendering = function() {
     // Update trackball controls
     controls.update();
 
-    theta += 0.01;
+    theta += 0.005;
 
 
     // Constantly rotate box
