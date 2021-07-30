@@ -6,21 +6,28 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 // doesn't work
 // import { MeshLine, MeshLineMaterial, MeshLineRaycast } from '../node_modules/three.meshline/src/THREE.MeshLine.js';
 
+document.addEventListener("DOMContentLoaded", function(event) { 
+
 
 // Constants
-const octobong_radius = 1.;
+const octobong_radius_ = 1.;
 const octobong_sides = 8;
-const octobong_height = 2.;
-const octobong_levels = 3.;
-const octobong_offset = 0.35 * Math.PI;
+const octobong_height_ = 2.;
+const octobong_levels_ = 8;
+const octobong_offset_ = 0.35 * Math.PI;
 
-
-
+var octobong_height = octobong_height_;
+var octobong_offset = octobong_offset_;
+var octobong_levels = octobong_levels_;
+var octobong_radius = octobong_radius_;
 // Scene
 const scene = new THREE.Scene();
 
+const scene_div = document.getElementById("scene");
+const svg = document.getElementById('svg');
+
 // Camera
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.6, 1200);
+const camera = new THREE.PerspectiveCamera(60, scene_div.offsetWidth / scene_div.offsetHeight, 0.6, 1200);
 ///camera.position.x = -4*octobong_radius; // Set camera position
 //camera.position.y = 5; // Set camera position
 
@@ -31,13 +38,14 @@ camera.position.z = 3;   ; // Set camera position
 // Renderer
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setClearColor("#233143"); // Set background colour
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement); // Add renderer to HTML as a canvas element
+//renderer.setSize(600, 600 * scene_div.offsetHeight / scene_div.offsetWidth );
+renderer.setSize(scene_div.offsetWidth, scene_div.offsetHeight);
+document.getElementById('scene').appendChild(renderer.domElement); // Add renderer to HTML as a canvas element
 
 // Make Canvas Responsive
 window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight); // Update size
-    camera.aspect = window.innerWidth / window.innerHeight; // Update aspect ratio
+    renderer.setSize(scene_div.offsetWidth, scene_div.offsetHeight); // Update size
+    camera.aspect = scene_div.offsetWidth / scene_div.offsetHeight; // Update aspect ratio
     camera.updateProjectionMatrix(); // Apply changes
 })
 
@@ -47,9 +55,19 @@ class Autogeometry {
     constructor() {
         this.geometry = new THREE.BufferGeometry();
         this.vertices = [];
+        this.rewind_mode = false;
+        this.frozen = false;
     }
     
+    rewind() {
+        assert(this.frozen, "Call get_geometry() to freeze mesh before rewind()");
+        this.rewind_mode = true;
+        this.index = 0;
+    }
+
     push_face_coords(v1, v2, v3) {
+        if(!this.rewind_mode) {
+            assert(!this.frozen, "Mesh is frozen after call to get_geometry. Use rewind() to update vertices.");
             this.vertices.push(v1[0]);
             this.vertices.push(v1[1]);
             this.vertices.push(v1[2]);
@@ -61,7 +79,28 @@ class Autogeometry {
             this.vertices.push(v3[0]);
             this.vertices.push(v3[1]);
             this.vertices.push(v3[2]);
+        } else { // rewind mode
+            const positions = this.geometry.attributes.position.array;
+            positions[this.index ++] = v1[0];
+            positions[this.index ++] = v1[1];
+            positions[this.index ++] = v1[2];
+        
+            positions[this.index ++] = v2[0];
+            positions[this.index ++] = v2[1];
+            positions[this.index ++] = v2[2];
+    
+            positions[this.index ++] = v3[0];
+            positions[this.index ++] = v3[1];
+            positions[this.index ++] = v3[2];
         }
+    }
+
+    request_update() {
+        // cutoff after this.index
+        this.geometry.computeVertexNormals();
+        this.geometry.setDrawRange( 0, this.index / 3 );
+        this.geometry.attributes.position.needsUpdate = true;
+    }
 
     get_geometry() {
         this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.vertices), 3));
@@ -70,6 +109,7 @@ class Autogeometry {
 
         // set the faces
         this.geometry.computeVertexNormals();
+        this.frozen = true;
 
         return this.geometry;
     }
@@ -101,47 +141,56 @@ function get_ith_coords(i, level) {
 
 const bong_material = new THREE.MeshStandardMaterial({color: '#fff', metalness: 0.3});
 
-// Bottom plate
+// Define bong part geometries
 const geometry_bottom = new Autogeometry();
-for(var i=0; i<8; i++) {
-    geometry_bottom.push_face_coords([0,0,0], get_ith_coords(i, 0), get_ith_coords(i+1, 0));
-}
-const bong_bottom = geometry_bottom.get_mesh_and_register(bong_material);
-
-// Top plate
 const geometry_top = new Autogeometry();
-for(var i=0; i<8; i++) {
-    geometry_top.push_face_coords(
-        [0, octobong_height, 0], 
-        get_ith_coords(i+1, octobong_levels),
-        get_ith_coords(i, octobong_levels)
-    );
-}
-const bong_top = geometry_top.get_mesh_and_register(bong_material);
-
-// Mesh sides 
 const geometry_side = new Autogeometry();
-var level = 1;
-for(var level=0; level<octobong_levels; level++) {
-    for(var side=0; side<octobong_sides; side++) {
-        geometry_side.push_face_coords(
-            get_ith_coords(side, level),
-            get_ith_coords(side, level+1),
-            get_ith_coords(side+1, level+1)     
-        );
-        geometry_side.push_face_coords(
-            get_ith_coords(side, level),
-            get_ith_coords(side+1, level+1),
-            get_ith_coords(side+1, level),
+
+function define_bong() {
+    // Bottom plate
+    for(var i=0; i<8; i++) {
+        geometry_bottom.push_face_coords(
+            [0,0,0], 
+            get_ith_coords(i, 0), 
+            get_ith_coords(i+1, 0));
+    }
+    
+    // Top plate
+    for(var i=0; i<8; i++) {
+        geometry_top.push_face_coords(
+            [0, octobong_height, 0], 
+            get_ith_coords(i+1, octobong_levels),
+            get_ith_coords(i, octobong_levels)
         );
     }
+    
+    // Mesh sides 
+    for(var level=0; level<octobong_levels; level++) {
+        for(var side=0; side<octobong_sides; side++) {
+            geometry_side.push_face_coords(
+                get_ith_coords(side, level),
+                get_ith_coords(side, level+1),
+                get_ith_coords(side+1, level+1)     
+            );
+            geometry_side.push_face_coords(
+                get_ith_coords(side, level),
+                get_ith_coords(side+1, level+1),
+                get_ith_coords(side+1, level),
+            );
+        }
+    }
+    
+    // Add edges
+    //const geometry_side_wires = new THREE.EdgesGeometry( geometry_side.get_geometry() );
+    //const bong_side_wires = new THREE.LineSegments(geometry_side_wires, new THREE.LineBasicMaterial( { 	color: 0xff0000 } ) );
+    //scene.add(bong_side);
 }
+
+define_bong(); // define first with max levels, then adjust levels
+const bong_bottom = geometry_bottom.get_mesh_and_register(bong_material);
+const bong_top = geometry_top.get_mesh_and_register(bong_material);
 const bong_side = geometry_side.get_mesh_and_register(bong_material);
 
-// Add edges
-const geometry_side_wires = new THREE.EdgesGeometry( geometry_side.get_geometry() );
-const bong_side_wires = new THREE.LineSegments(geometry_side_wires, new THREE.LineBasicMaterial( { 	color: 0xff0000 } ) );
-scene.add(bong_side);
 
 
 
@@ -248,10 +297,52 @@ var pivot = new THREE.Group();
 pivot.add( bong_side );
 pivot.add( bong_top);
 pivot.add( bong_bottom);
-pivot.add( bong_side_wires);
+//pivot.add( bong_side_wires);
 scene.add(pivot);
 //side1.position.set( 0, ); // the negative of the group's center
 
+
+// update positions
+function update_bong() {
+
+    // read parameters from sliders
+    octobong_height = slider_height.value;
+    octobong_radius = slider_radius.value;
+    octobong_levels = slider_levels.value;
+    octobong_offset = slider_offset.value;
+
+    geometry_bottom.rewind();
+    geometry_top.rewind();
+    geometry_side.rewind();
+    define_bong();
+    geometry_bottom.request_update();
+    geometry_top.request_update();
+    geometry_side.request_update();
+}
+
+octobong_levels = 3;
+
+// Slider
+const slider_height = document.getElementById("slider_height");
+const slider_offset = document.getElementById("slider_offset");
+const slider_levels = document.getElementById("slider_levels");
+const slider_radius = document.getElementById("slider_radius");
+
+update_bong();
+
+
+slider_height.addEventListener("input", function(e) {
+    update_bong();
+});
+slider_offset.addEventListener("input", function(e) {
+    update_bong();
+});
+slider_levels.addEventListener("input", function(e) {
+    update_bong();
+});
+slider_radius.addEventListener("input", function(e) {
+    update_bong();
+});
 
 
 // Rendering Function
@@ -275,3 +366,6 @@ const rendering = function() {
 }
 
 rendering();
+
+
+}); // document.ready

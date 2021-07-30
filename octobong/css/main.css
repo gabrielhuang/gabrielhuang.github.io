@@ -1,7 +1,25 @@
+@font-face {
+    font-family: Roboto;
+    src: url('../fonts/Roboto/Roboto-BlackItalic.ttf'); 
+}
 body {
     margin: 0px;
     height: 100vh;
+    font-family: Roboto;
 }
 canvas {
     display: block;
+}
+#scene {
+    display: inline-block;
+    width: 600px;
+    height: 600px;
+    padding-bottom: 2ex;
+    background: gold; /** <-- For the demo **/
+}
+svg {
+    width: 600px;
+    height: 600px;
+    background: purple; /** <-- For the demo **/
+
 }
