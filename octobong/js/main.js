@@ -8,18 +8,24 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 
 document.addEventListener("DOMContentLoaded", function(event) { 
 
+// Sliders
+const slider_height = document.getElementById("slider_height");
+const slider_offset = document.getElementById("slider_offset");
+const slider_levels = document.getElementById("slider_levels");
+const slider_radius = document.getElementById("slider_radius");
 
-// Constants
-const octobong_radius_ = 1.;
-const octobong_sides = 8;
-const octobong_height_ = 2.;
-const octobong_levels_ = 8;
-const octobong_offset_ = 0.35 * Math.PI;
+const label_height = document.getElementById("label_height");
+const label_offset = document.getElementById("label_offset");
+const label_levels = document.getElementById("label_levels");
+const label_radius = document.getElementById("label_radius");
 
-var octobong_height = octobong_height_;
-var octobong_offset = octobong_offset_;
-var octobong_levels = octobong_levels_;
-var octobong_radius = octobong_radius_;
+// Constants -> set to max first (to get all vertices)
+var octobong_height = slider_height.value;
+var octobong_offset = slider_offset.value;
+var octobong_levels = 5; //Math.floor(slider_levels.value);
+var octobong_radius = slider_radius.value;
+var octobong_sides = 16; //Math.floor(slider_sides.value);
+
 // Scene
 const scene = new THREE.Scene();
 
@@ -41,6 +47,7 @@ renderer.setClearColor("#233143"); // Set background colour
 //renderer.setSize(600, 600 * scene_div.offsetHeight / scene_div.offsetWidth );
 renderer.setSize(scene_div.offsetWidth, scene_div.offsetHeight);
 document.getElementById('scene').appendChild(renderer.domElement); // Add renderer to HTML as a canvas element
+
 
 // Make Canvas Responsive
 window.addEventListener('resize', () => {
@@ -148,7 +155,7 @@ const geometry_side = new Autogeometry();
 
 function define_bong() {
     // Bottom plate
-    for(var i=0; i<8; i++) {
+    for(var i=0; i<octobong_sides; i++) {
         geometry_bottom.push_face_coords(
             [0,0,0], 
             get_ith_coords(i, 0), 
@@ -156,7 +163,7 @@ function define_bong() {
     }
     
     // Top plate
-    for(var i=0; i<8; i++) {
+    for(var i=0; i<octobong_sides; i++) {
         geometry_top.push_face_coords(
             [0, octobong_height, 0], 
             get_ith_coords(i+1, octobong_levels),
@@ -224,7 +231,7 @@ light.target.position.set(0, octobong_height/2, 0);
 scene.add(light);
 scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
-scene.add(helper);
+//scene.add(helper);
 
 
 var color = 0xddddff;
@@ -235,7 +242,7 @@ light.target.position.set(0, octobong_height/2, 0);
 scene.add(light);
 scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
-scene.add(helper);
+//scene.add(helper);
 
 
 var color = 0xffdddd;
@@ -246,7 +253,7 @@ light.target.position.set(0, octobong_height/2, 0);
 scene.add(light);
 scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
-scene.add(helper);
+//scene.add(helper);
 
 /*
 var color = 0xffccff;
@@ -302,14 +309,28 @@ scene.add(pivot);
 //side1.position.set( 0, ); // the negative of the group's center
 
 
+var audio = new Audio('mp3/nine-lives-unicorn-heads.mp3');
+
 // update positions
 function update_bong() {
+
+    audio.play();
+
+    document.getElementById("header").classList.add("glow");
 
     // read parameters from sliders
     octobong_height = slider_height.value;
     octobong_radius = slider_radius.value;
     octobong_levels = slider_levels.value;
     octobong_offset = slider_offset.value;
+    octobong_sides = slider_sides.value;
+
+    // patch labels
+    label_height.innerHTML = "Height: " + (octobong_height * 100).toFixed(0) + "mm";
+    label_radius.innerHTML = "Radius: " + (octobong_radius * 100).toFixed(0) + "mm";
+    label_offset.innerHTML = "Offset: " + (octobong_offset * 180 / Math.PI).toFixed(0) + "°";
+    label_levels.innerHTML = "Levels: " + octobong_levels + " levels";
+    label_sides.innerHTML = "Sides: " + octobong_sides+ " sides";
 
     geometry_bottom.rewind();
     geometry_top.rewind();
@@ -322,11 +343,7 @@ function update_bong() {
 
 octobong_levels = 3;
 
-// Slider
-const slider_height = document.getElementById("slider_height");
-const slider_offset = document.getElementById("slider_offset");
-const slider_levels = document.getElementById("slider_levels");
-const slider_radius = document.getElementById("slider_radius");
+
 
 update_bong();
 
@@ -341,6 +358,9 @@ slider_levels.addEventListener("input", function(e) {
     update_bong();
 });
 slider_radius.addEventListener("input", function(e) {
+    update_bong();
+});
+slider_sides.addEventListener("input", function(e) {
     update_bong();
 });
 
@@ -366,6 +386,8 @@ const rendering = function() {
 }
 
 rendering();
+
+renderer.setSize(scene_div.offsetWidth, scene_div.offsetHeight);
 
 
 }); // document.ready

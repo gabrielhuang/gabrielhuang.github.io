@@ -1,25 +1,131 @@
 @font-face {
     font-family: Roboto;
-    src: url('../fonts/Roboto/Roboto-BlackItalic.ttf'); 
+    src: url('../fonts/Roboto/Roboto-Light.ttf'); 
 }
+header {
+    background-color: #a12540;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    z-index: 100;
+}
+h1 {
+    text-align: center;
+    margin: 0;
+    padding: 30px;
+    text-shadow: 2px 2px 2px black;
+    color: white;
+}
+.slider {
+    border-radius: 5px;  
+    height: 25px;
+
+}
+
+.glow {
+    animation: glow 2.33s infinite;
+}
+@keyframes glow {
+    0% {
+        background-color: #a12540;
+    }
+    50% {
+        background-color:#ac3d55;
+    }
+  }
+  
+
 body {
-    margin: 0px;
-    height: 100vh;
+    font-weight: 100;
     font-family: Roboto;
+    padding: 0;
+    margin: 0;
+    background-color: black;
 }
-canvas {
-    display: block;
+
+
+.demoWrapper {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
 }
+
+
+
+
 #scene {
-    display: inline-block;
-    width: 600px;
-    height: 600px;
-    padding-bottom: 2ex;
+    width: 100vmin;
+    height: 100vmin;
+    /*max-width: 400px;*/
+    max-height: 400px;
     background: gold; /** <-- For the demo **/
 }
-svg {
-    width: 600px;
-    height: 600px;
-    background: purple; /** <-- For the demo **/
+#svg {
+    width: 100vmin;
+    height: 100vmin;
+    /* max-width: 400px; */
+    max-height: 400px;
+    /* background:#6b5b95; */
+    background-color: #bbb;
+
+}
+#controls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    background-color: #feb236; /** <-- For the demo **/
+    padding: 10px;
+}   
+
+
+canvas {
+}
+
+#controls ul {
+    list-style-type: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap:wrap;
+    justify-content: center;
+    padding: 0px;
+}
+
+#controls li {
+    margin-right:20px;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#controls p {
+    text-align: center;
+}
+
+#controls a {
+    color: white;
+}
+
+@media (min-width: 800px) { 
+    /* Side by side */
+    .demoWrapper {
+        flex-wrap: nowrap;
+    }
+    #controls ul {
+        flex-direction: column;
+        width: 120px;
+    }
+    #scene {
+        width: 40vw;
+        height: 100vmin;
+        max-width: none;
+        max-height: 50vw;
+    }
+    #svg {
+        width: 40vw;
+        height: 100vmin;
+        max-width: none;
+        max-height: 50vw;
+    }
 
 }
