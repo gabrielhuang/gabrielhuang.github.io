@@ -60,21 +60,25 @@ body {
     max-height: 400px;
     background: gold; /** <-- For the demo **/
 }
-#svg {
+svg {
     width: 100vmin;
     height: 100vmin;
     /* max-width: 400px; */
     max-height: 400px;
     /* background:#6b5b95; */
-    background-color: #bbb;
-
+    background-color:darkgreen;
 }
+svg line {
+    stroke:limegreen;
+}
+
 #controls {
     display: flex;
     flex-direction: column;
     justify-content: center;
     color: white;
     background-color: #feb236; /** <-- For the demo **/
+    background-color: #5e5d99e0; /** <-- For the demo **/
     padding: 10px;
 }   
 

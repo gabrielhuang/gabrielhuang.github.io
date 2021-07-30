@@ -253,41 +253,6 @@ light.target.position.set(0, octobong_height/2, 0);
 scene.add(light);
 scene.add(light.target);
 var helper = new THREE.DirectionalLightHelper(light);
-//scene.add(helper);
-
-/*
-var color = 0xffccff;
-var intensity = 0.5;
-var light = new THREE.DirectionalLight(color, intensity);
-light.position.set(0, 0, -10);
-light.target.position.set(0, 0, 0);
-scene.add(light);
-scene.add(light.target);
-var helper = new THREE.DirectionalLightHelper(light);
-scene.add(helper);
-*/
-
-/*
-var color = 0xccffcc;
-var intensity = 0.1;
-var light = new THREE.DirectionalLight(color, intensity);
-light.position.set(10, 0, 5);
-light.target.position.set(0, 0, 0);
-scene.add(light);
-scene.add(light.target);
-
-var helper = new THREE.DirectionalLightHelper(light);
-scene.add(helper);
-*/
-
-/*
-const gui = new GUI();
-gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color');
-gui.add(light, 'intensity', 0, 2, 0.01);
-gui.add(light.target.position, 'x', -10, 10, .01);
-gui.add(light.target.position, 'z', -10, 10, .01);
-gui.add(light.target.position, 'y', 0, 10, .01);
-*/
 
 
 //Trackball Controls for Camera 
@@ -341,10 +306,30 @@ function update_bong() {
     geometry_side.request_update();
 }
 
+function draw_line(x1, y1, x2, y2, stroke) {
+    stroke = stroke || "black";
+    var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+    newLine.setAttribute('x1',x1);
+    newLine.setAttribute('y1',y1);
+    newLine.setAttribute('x2',x2);
+    newLine.setAttribute('y2',y2);
+    newLine.setAttribute("stroke", "black");
+    svg.append(newLine);
+}
+function draw_flat_bong() {
+    const bbox = svg.getBoundingClientRect();
+    const h = bbox.height;
+    const w = bbox.width;
+    for(var i=0;i<10;i++){
+        draw_line(i*h/10, 0, i*h/10, h);
+        draw_line(0, i*h/10, h, i*h/10);
+    }
+}
+draw_flat_bong();
+
+
+
 octobong_levels = 3;
-
-
-
 update_bong();
 
 
