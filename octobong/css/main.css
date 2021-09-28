@@ -19,7 +19,11 @@ h1 {
 .slider {
     border-radius: 5px;  
     height: 25px;
-
+}
+.slider_secondary {
+    border-radius: 5px;  
+    height: 25px;
+    background: gray;
 }
 
 .glow {
@@ -61,16 +65,19 @@ body {
     background: gold; /** <-- For the demo **/
 }
 svg {
+    /*
     width: 100vmin;
     height: 100vmin;
-    /* max-width: 400px; */
     max-height: 400px;
-    /* background:#6b5b95; */
+    */
     background-color:darkgreen;
 }
+
+/*
 svg line {
     stroke:limegreen;
 }
+*/
 
 #controls {
     display: flex;
@@ -125,11 +132,12 @@ canvas {
         max-width: none;
         max-height: 50vw;
     }
+    /*
     #svg {
         width: 40vw;
         height: 100vmin;
         max-width: none;
         max-height: 50vw;
     }
-
+    */
 }

@@ -13,26 +13,44 @@
     <!-- <script src="../node_modules/three.meshline/src/THREE.MeshLine.js"></script> -->
 
     <header id="header">
-        <h1 class="icon">Octobong Designer - オクトボンデザイナー</h1>
+        <h1 class="icon">Octabong Designer - オクトボンデザイナー</h1>
     </header>
 
-    <script type="module" src="./js/main.js"></script>
+    <script type="module" src="./js/main_v2.js"></script>
+    <script src="./js/svg-export.js"></script>
 
     <div class="demoWrapper">
         <div id="scene">
         </div>
         <div id="controls">
+            Bong Characteristics
             <ul>
-                <li><label id="label_height">Octobong Height: </label><input class="slider" type="range" min="0.1" max="3" value="2" step="0.01" id="slider_height" orient="vertical" ></li>
-                <li><label id="label_radius">Octobong Radius: </label><input class="slider" type="range" min="0.1" max="2" value="1" step="0.01" id="slider_radius" orient="vertical" ></li>
-                <li><label id="label_offset">Octobong Offset: </label><input class="slider" type="range" min="-3" max="3" value="1." step="0.01" id="slider_offset" orient="vertical" ></li>
-                <li><label id="label_levels">Octobong Levels: </label><input class="slider" type="range" min="1" max="5" value="3" step="1" id="slider_levels" orient="vertical" ></li>
-                <li><label id="label_sides">Octobong Sides: </label><input class="slider" type="range" min="3" max="16" value="8" step="1" id="slider_sides" orient="vertical" ></li>
+                <!-- <li><label id="label_height">Octobong Height: </label><input class="slider" type="range" min="0.1" max="3" value="2" step="0.01" id="slider_height" orient="vertical" ></li> -->
+                <li><label id="label_radius">Radius: </label><input class="slider" type="range" min="0.1" max="2" value="0.78" step="0.01" id="slider_radius" orient="vertical" ></li>
+                <li><label id="label_sides">Sides: </label><input class="slider" type="range" min="3" max="16" value="8" step="1" id="slider_sides" orient="vertical" ></li>
+                <li><label id="label_levels">Levels: </label><input class="slider" type="range" min="1" max="5" value="3" step="1" id="slider_levels" orient="vertical" ></li>
+                <li><label id="label_offset">Flat Offset: </label><input class="slider" type="range" min="-180" max="180" value="90" step="1" id="slider_offset" orient="vertical" ></li>
+                <li><label id="label_pre_overlap">Pre-Overlap </label><input class="slider_secondary" type="range" min="0" max="1" value="0" step="0.01" id="slider_pre_overlap" orient="vertical" ></li>
+                <li><label id="label_post_overlap">Post-Overlap </label><input class="slider_secondary" type="range" min="0" max="1" value="0.25" step="0.01" id="slider_post_overlap" orient="vertical" ></li>
+                <li><label id="label_flapsize">Flap Size </label><input class="slider_secondary" type="range" min="0" max="1" value="0.35" step="0.01" id="slider_flapsize" orient="vertical" ></li>
+                <li><label id="label_flaptaper">Flap Taper </label><input class="slider_secondary" type="range" min="0" max="1" value="0.9" step="0.01" id="slider_flaptaper" orient="vertical" ></li>
+                <li><label id="label_bounding_box">Bounding Box:</b></label></li>
+                <li><label id="label_side_length">Side Length:</b></label></li>
+                <li><label id="label_diagonals">Diagonals</b></label></li>
+                <li><label id="label_height">Flat Height:</b></label></li>
             </ul>
-            <p>Download SVG <a href="#">here</a>.</p>
-            <p>Generate <a href="#" onclick="randomize_bong();">random</a> bong.</p>
+            Unfolding State
+            <ul>
+                <li><label id="label_current_offset">Live Offset: </label><input class="slider" type="range" min="-180" max="180" value="40" step="1" id="slider_current_offset" orient="vertical" ></li>
+                <li><label id="label_current_height">Live Height: </label></li>
+                <li><label id="label_stretch_height">Stretch Height: </label></li>
+                <li><label id="label_current_diagonals">Live Diagonals</label></input></li>
+
+            </ul>
+            <p>Download SVG@72dpi <a href="#" id="blueprint_link">here</a>.</p>
+            <!-- <p>Generate <a href="#" onclick="randomize_bong();">random</a> bong.</p> -->
         </div>
-        <svg id="svg"></svg>
+        <svg id="blueprint" width="480" height="240" viewBox="0 0 1728 864"></svg>
 
     </div>
 
