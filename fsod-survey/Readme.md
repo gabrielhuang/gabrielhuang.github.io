@@ -15,6 +15,7 @@
 <p>
 [<a class="cute" href="https://arxiv.org/abs/2110.14711">arXiv</a>]  
 [<a class="cute" href="https://arxiv.org/pdf/2110.14711.pdf">PDF</a>]
+[<a class="cute" href="https://gabrielhuang.github.io/fsod-survey/">Project page</a>]
 </p>
 
 <div style="text-align: justify;">
