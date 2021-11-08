@@ -16,6 +16,8 @@
 [<a class="cute" href="https://arxiv.org/abs/2110.14711">arXiv</a>]  
 [<a class="cute" href="https://arxiv.org/pdf/2110.14711.pdf">PDF</a>]
 [<a class="cute" href="https://gabrielhuang.github.io/fsod-survey/">Project page</a>]
+[<a class="cute" href="https://github.com/gabrielhuang/awesome-few-shot-object-detection">Awesome Few-Shot Object Detection</a>]
+[<a class="cute" href="https://deepai.org/publication/a-survey-of-self-supervised-and-few-shot-object-detection">Deep AI</a>]
 </p>
 
 <div style="text-align: justify;">
