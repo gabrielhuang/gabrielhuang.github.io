@@ -37,13 +37,13 @@ pre code {
 
 .papers .text {
   vertical-align: middle;
-  //background-color: #eee;
+  /* background-color: #eee; */
   width: 400px;
   display: inline-block;
 }
 
 .papers img {
-  //vertical-align: middle;
+  /* vertical-align: middle; */
   margin: 10px;
   width: 192px;
   height: 128px;
