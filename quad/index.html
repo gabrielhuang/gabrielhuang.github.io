@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -20,9 +19,12 @@
   <div class="container">
     <label for="presetDropdown">Choose Preset:</label>
     <select id="presetDropdown">
-      <option value="montreal">Montreal 850k 4-plex 55k revenue</option>
-      <option value="granby">Granby 400k 4-plex 40k revenue</option>
+      <option value="default">Default: Montreal 850k 4-plex 55k revenue</option>
+      <!-- <option value="granby">Granby 400k 4-plex 40k revenue</option> -->
+      <!-- <option value="default">Default Rental Property</option> -->
     </select>
+    <button id="savePreset">Save Preset AS</button>
+    <button id="deletePreset">Delete Preset</button>
   </div>
 
   <div class="container">
@@ -42,12 +44,17 @@
 
   <div class="container">
     <label for="annualPropertyGrowth">Annual Property Growth: <span id="annualPropertyGrowthValue">4</span>%</label>
-    <input type="range" id="annualPropertyGrowth" value="3=4" min="0" max="10" step="0.1">
+    <input type="range" id="annualPropertyGrowth" value="4" min="0" max="10" step="0.1">
+  </div>
+
+  <div class="container">
+    <label for="amortization">Amortization: <span id="amortizationValue">25</span>years</label>
+    <input type="range" id="amortization" value="25" min="25" max="30" step="5">
   </div>
 
   <div class="container">
     <label for="interestRate">Mortgage Interest Rate: <span id="interestRateValue">4.4</span>%</label>
-    <input type="range" id="interestRate" value="4.4" min="1" max="10" step="0.1">
+    <input type="range" id="interestRate" value="4.4" min="1" max="10" step="0.01">
   </div>
 
   <div class="container">
@@ -92,7 +99,7 @@
         }
       },
       responsive: true,
-      maintainAspectRatio: false,
+      maintainAspectRatio: true,
     }
   });
 
@@ -110,19 +117,20 @@
 
   function tabulate(series, name) {
     let info = `${name} over years\n`;
-    [0, 1, 2, 3, 5, 10, 15, 20, 25, 26].forEach(i => {
+    [0, 1, 2, 3, 5, 10, 15, 20, 25, 26, 30, 31].forEach(i => {
        info += `${name} at ${i} years: $${(series[i]).toFixed(0)}\n`;
     });
     return info
   }
 
   function calculateInvestments() {
-    const years = 30;
+    const years = 32;
     const initialInvestment = parseFloat(document.getElementById('initialInvestment').value);
     const propertyPrice = initialInvestment / 0.20;
     document.getElementById('propertyPrice').innerText = `(property ${propertyPrice}`;
     const annualStockGrowth = parseFloat(document.getElementById('annualStockGrowth').value) / 100;
     const annualPropertyGrowth = parseFloat(document.getElementById('annualPropertyGrowth').value) / 100;
+    const amortization = parseFloat(document.getElementById('amortization').value);
     const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
     const operatingCosts = parseFloat(document.getElementById('operatingCosts').value) / 100;
     const rentalIncomeGrowth = parseFloat(document.getElementById('rentalIncomeGrowth').value) / 100;
@@ -133,13 +141,13 @@
     let stockValues = Array.from({length: years+1}, (_, year) => initialInvestment * (1+annualStockGrowth)**year - initialInvestment);
     let propertyValues = Array.from({length: years+1}, (_, year) => initialInvestment / 0.20 * (1 + annualPropertyGrowth)**year);
     let mortgageBalance = Array.from({length: years+1}, (_, year) =>
-      year <= 25 ? (initialInvestment / 0.20 - initialInvestment) * ((1 + interestRate)**25 - (1 + interestRate)**year) / ((1 + interestRate)**25 - 1) : 0
+      year <= amortization ? (initialInvestment / 0.20 - initialInvestment) * ((1 + interestRate)**amortization - (1 + interestRate)**year) / ((1 + interestRate)**amortization - 1) : 0
     );
     let equity = propertyValues.map((value, index) => value - mortgageBalance[index]);
     let rentalIncomes = Array.from({length: years+1}, (_, year) => (initialInvestment / 0.20 / MRB) * (1 + rentalIncomeGrowth)**year);
     let operatingExpenses = propertyValues.map(value => value * operatingCosts);
     let debtService = mortgageBalance.map((value, index) => 
-      index <= 25 ? (initialInvestment / 0.20 - initialInvestment) * interestRate * ((1 + interestRate)**25) / ((1 + interestRate)**25 - 1) : 0
+      index <= amortization ? (initialInvestment / 0.20 - initialInvestment) * interestRate * ((1 + interestRate)**amortization) / ((1 + interestRate)**amortization - 1) : 0
     );
     let cashFlows = Array.from({length: years+1}, (v, index) => rentalIncomes[index] - operatingExpenses[index] - debtService[index]);
     let cumulativeCashFlows = cashFlows.reduce((acc, curr, index) => [...acc, (acc[index-1] || 0) + curr], []);
@@ -149,7 +157,7 @@
 
     let gic = Array.from({length: years+1}, (_, year) => initialInvestment * (1 + interestRate)**year - initialInvestment);
     const equityOnly = !document.getElementById('equityOnly').checked;
-    let maxNewLoanAmounts = cashFlows.map((cf, idx) => maxLoanAmount(cf, interestRate, 25, propertyValues[idx], mortgageBalance[idx], equityOnly));
+    let maxNewLoanAmounts = cashFlows.map((cf, idx) => maxLoanAmount(cf, interestRate, amortization, propertyValues[idx], mortgageBalance[idx], equityOnly));
 
     document.getElementById('cashflowinfo').innerText = tabulate(cashFlows, 'Cash Flow');
 
@@ -217,37 +225,158 @@
 
   document.getElementById('equityOnly').addEventListener('change', calculateInvestments);
 
-  document.getElementById('presetDropdown').addEventListener('change', function() {
-    document.getElementById('interestRate').value = 4.4;
-    document.getElementById('rentalIncomeGrowth').value = 3;
-    document.getElementById('annualStockGrowth').value = 8;
+  document.getElementById('deletePreset').addEventListener('click', function() {
+    const presetName = document.getElementById('presetDropdown').value;
+    deletePreset(presetName);
+    calculateInvestments();
+  });
+
+  document.getElementById('savePreset').addEventListener('click', function() {
+    // By default, preset name is selected option
+    let presetNameDefault = document.getElementById('presetDropdown').value;
+    presetName = prompt('Save preset as:', presetNameDefault);
+    if (presetName) {
+      savePreset(presetName);
+      document.getElementById('presetDropdown').value = presetName;
+      calculateInvestments();
+      alert(`Preset "${presetName}" saved`);
+    }
+  });
+
+  // document.getElementById('presetDropdown').addEventListener('change', function() {
+  //   document.getElementById('interestRate').value = 4.4;
+  //   document.getElementById('rentalIncomeGrowth').value = 3;
+  //   document.getElementById('annualStockGrowth').value = 8;
 
 
-    if (this.value === 'montreal') {
-      document.getElementById('initialInvestment').value = 170000;
-      document.getElementById('mrb').value = 17;
-      document.getElementById('annualPropertyGrowth').value = 4;
-      document.getElementById('operatingCosts').value = 1.5;
-    } else if (this.value === 'granby') {
-      document.getElementById('initialInvestment').value = 80000;
-      document.getElementById('mrb').value = 12;
-      document.getElementById('annualPropertyGrowth').value = 2.5;
-      document.getElementById('operatingCosts').value = 2.5;
+  //   if (this.value === 'montreal') {
+  //     document.getElementById('initialInvestment').value = 170000;
+  //     document.getElementById('mrb').value = 17;
+  //     document.getElementById('annualPropertyGrowth').value = 4;
+  //     document.getElementById('operatingCosts').value = 1.5;
+  //   } else if (this.value === 'granby') {
+  //     document.getElementById('initialInvestment').value = 80000;
+  //     document.getElementById('mrb').value = 12;
+  //     document.getElementById('annualPropertyGrowth').value = 2.5;
+  //     document.getElementById('operatingCosts').value = 2.5;
+  //   }
+
+  //   // Update the displayed values
+  //   document.getElementById('initialInvestmentValue').textContent = document.getElementById('initialInvestment').value;
+  //   document.getElementById('mrbValue').textContent = document.getElementById('mrb').value;
+  //   document.getElementById('annualStockGrowthValue').textContent = document.getElementById('annualStockGrowth').value;
+  //   document.getElementById('annualPropertyGrowthValue').textContent = document.getElementById('annualPropertyGrowth').value;
+  //   document.getElementById('interestRateValue').textContent = document.getElementById('interestRate').value;
+  //   document.getElementById('operatingCostsValue').textContent = document.getElementById('operatingCosts').value;
+  //   document.getElementById('rentalIncomeGrowthValue').textContent = document.getElementById('rentalIncomeGrowth').value;
+
+  //   calculateInvestments();
+  // });
+
+
+  //////////////// Preset logic
+  // Load saved presets from local storage
+  function loadPresets() {
+    const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
+    Object.keys(savedPresets).forEach(key => {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = key;
+      document.getElementById('presetDropdown').appendChild(option);
+    });
+  }
+
+  function savePreset(name) {
+    const preset = {
+      initialInvestment: document.getElementById('initialInvestment').value,
+      mrb: document.getElementById('mrb').value,
+      annualStockGrowth: document.getElementById('annualStockGrowth').value,
+      annualPropertyGrowth: document.getElementById('annualPropertyGrowth').value,
+      amortization: document.getElementById('amortization').value,
+      interestRate: document.getElementById('interestRate').value,
+      operatingCosts: document.getElementById('operatingCosts').value,
+      rentalIncomeGrowth: document.getElementById('rentalIncomeGrowth').value
+    };
+
+    const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
+    savedPresets[name] = preset;
+    localStorage.setItem('presets', JSON.stringify(savedPresets));
+
+    // Add the new preset to dropdown if it doesn't already exist
+    const dropdown = document.getElementById('presetDropdown');
+    if (!dropdown.querySelector(`option[value="${name}"]`)) {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      dropdown.appendChild(option);
+    }
+  }
+
+  function deletePreset(name) {
+    const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
+    delete savedPresets[name];
+    localStorage.setItem('presets', JSON.stringify(savedPresets));
+    if (name != 'default') {
+      const dropdown = document.getElementById('presetDropdown');
+      dropdown.removeChild(dropdown.querySelector(`option[value="${name}"]`));
+    }
+  }
+
+  // Modify event listener to handle new and custom presets
+  document.getElementById('presetDropdown').addEventListener('change', function () {
+    const presetName = this.value;
+    let preset;
+
+    if (this.value === 'default') {
+        preset = {
+          initialInvestment: 170000,
+          mrb: 17,
+          annualStockGrowth: 8,
+          annualPropertyGrowth: 4,
+          amortization: 25,
+          interestRate: 4.4,
+          operatingCosts: 1.5,
+          rentalIncomeGrowth: 3
+        };
+    } else {
+      const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
+      preset = savedPresets[presetName];
     }
 
+    if(!preset) {
+      alert('No preset found with name', presetName);
+      return;
+    }
+
+    // Update slider values
+    document.getElementById('initialInvestment').value = preset.initialInvestment;
+    document.getElementById('mrb').value = preset.mrb;
+    document.getElementById('annualStockGrowth').value = preset.annualStockGrowth;
+    document.getElementById('annualPropertyGrowth').value = preset.annualPropertyGrowth;
+    document.getElementById('amortization').value = preset.amortization;
+    document.getElementById('interestRate').value = preset.interestRate;
+    document.getElementById('operatingCosts').value = preset.operatingCosts;
+    document.getElementById('rentalIncomeGrowth').value = preset.rentalIncomeGrowth;
+    
     // Update the displayed values
-    document.getElementById('initialInvestmentValue').textContent = document.getElementById('initialInvestment').value;
-    document.getElementById('mrbValue').textContent = document.getElementById('mrb').value;
-    document.getElementById('annualStockGrowthValue').textContent = document.getElementById('annualStockGrowth').value;
-    document.getElementById('annualPropertyGrowthValue').textContent = document.getElementById('annualPropertyGrowth').value;
-    document.getElementById('interestRateValue').textContent = document.getElementById('interestRate').value;
-    document.getElementById('operatingCostsValue').textContent = document.getElementById('operatingCosts').value;
-    document.getElementById('rentalIncomeGrowthValue').textContent = document.getElementById('rentalIncomeGrowth').value;
+    document.getElementById('initialInvestmentValue').textContent = preset.initialInvestment;
+    document.getElementById('mrbValue').textContent = preset.mrb;
+    document.getElementById('annualStockGrowthValue').textContent = preset.annualStockGrowth;
+    document.getElementById('annualPropertyGrowthValue').textContent = preset.annualPropertyGrowth;
+    document.getElementById('amortizationValue').textContent = preset.amortization;
+    document.getElementById('interestRateValue').textContent = preset.interestRate;
+    document.getElementById('operatingCostsValue').textContent = preset.operatingCosts;
+    document.getElementById('rentalIncomeGrowthValue').textContent = preset.rentalIncomeGrowth;
 
     calculateInvestments();
   });
 
-  window.onload = calculateInvestments;
+  ////////// Load any saved presets when the page loads
+  window.onload = function () {
+    loadPresets();
+    calculateInvestments();
+  };
+
 </script>
 </body>
 </html>
