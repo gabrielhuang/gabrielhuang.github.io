@@ -71,11 +71,19 @@
     <label for="rentalIncomeGrowth">Rental Income Growth: <span id="rentalIncomeGrowthValue">3</span>%</label>
     <input type="range" id="rentalIncomeGrowth" value="3" min="0" max="10" step="0.1">
   </div>
+
+  <div class="container">
+    <label for="year">Details for year <span id="yearValue">5</span></label>
+    <input type="range" id="year" value="5" min="0" max="32" step="1">
+  </div>
+  Taxable income is rental income minus interest and operating expenses. Tax is computed by multiplying taxable income by tax rate.
 </div>
 
-<canvas id="investmentChart"></canvas>
+<div>
+  <canvas id="investmentChart"></canvas>
 
 <p id="cashflowinfo"></p>
+</div>
 
 <script>
   const ctx = document.getElementById('investmentChart').getContext('2d');
@@ -138,22 +146,47 @@
     const operatingCosts = parseFloat(document.getElementById('operatingCosts').value) / 100;
     const rentalIncomeGrowth = parseFloat(document.getElementById('rentalIncomeGrowth').value) / 100;
 
-    let stockValues = Array.from({length: years+1}, (_, year) => initialInvestment * (1+annualStockGrowth)**year - initialInvestment);
+    let taxRate = 0.45;
+
+    let stockGains = Array.from({length: years+1}, (_, year) => initialInvestment * (1+annualStockGrowth)**year - initialInvestment);
+    let afterTaxStockGains = stockGains.map((value, index) => value * (1 - 0.5 * taxRate)); 
     let propertyValues = Array.from({length: years+1}, (_, year) => propertyPrice * (1 + annualPropertyGrowth)**year);
     let mortgageBalance = Array.from({length: years+1}, (_, year) =>
       year <= amortization ? (propertyPrice - initialInvestment) * ((1 + interestRate)**amortization - (1 + interestRate)**year) / ((1 + interestRate)**amortization - 1) : 0
     );
+
     let equity = propertyValues.map((value, index) => value - mortgageBalance[index]);
     let rentalIncomes = Array.from({length: years+1}, (_, year) => initialRent * (1 + rentalIncomeGrowth)**year);
     let operatingExpenses = propertyValues.map(value => value * operatingCosts);
     let debtService = mortgageBalance.map((value, index) => 
       index <= amortization ? (propertyPrice - initialInvestment) * interestRate * ((1 + interestRate)**amortization) / ((1 + interestRate)**amortization - 1) : 0
     );
-    let cashFlows = Array.from({length: years+1}, (v, index) => rentalIncomes[index] - operatingExpenses[index] - debtService[index]);
-    let cumulativeCashFlows = cashFlows.reduce((acc, curr, index) => [...acc, (acc[index-1] || 0) + curr], []);
 
+    // Compute interest and principal paid each year
+    let interestPaid = Array.from({length: years+1}, (_, year) => mortgageBalance[year] * interestRate);
+    let principalPaid = Array.from({length: years+1}, (_, year) => debtService[year] - interestPaid[year]);
+
+    let cashFlows = Array.from({length: years+1}, (v, index) => rentalIncomes[index] - operatingExpenses[index] - debtService[index]);
+    
+    
+    let cumulativeCashFlows = cashFlows.reduce((acc, curr, index) => [...acc, (acc[index-1] || 0) + curr], []);
+    
     let rentalGains = Array.from({length: years+1}, (_, year) => equity[year] + cumulativeCashFlows[year] - initialInvestment);
     let maxNewLoanAmounts = cashFlows.map((cf, idx) => maxLoanAmount(cf, interestRate, amortization, propertyValues[idx], mortgageBalance[idx], !document.getElementById('equityOnly').checked));
+
+    // after income taxes
+    let taxableIncome = Array.from({length: years+1}, (_, year) => rentalIncomes[year] - interestPaid[year] - operatingExpenses[year]);
+    let incomeTaxes = Array.from({length: years+1}, (_, year) => taxableIncome[year] * taxRate);  
+    let afterTaxIncome = Array.from({length: years+1}, (_, year) => taxableIncome[year] - incomeTaxes[year]);
+    
+    let afterTaxCashFlow = Array.from({length: years+1}, (_, year) => cashFlows[year] - incomeTaxes[year]);
+    let cumulativeAfterTaxCashFlow = afterTaxCashFlow.reduce((acc, curr, index) => [...acc, (acc[index-1] || 0) + curr], []);
+
+    let propertyAppreciation = Array.from({length: years+1}, (_, year) => propertyValues[year] - propertyPrice);
+    let capitalGainsTaxes = Array.from({length: years+1}, (_, year) => propertyAppreciation[year] * 0.5 * taxRate);
+
+    let afterTaxRentalGains = Array.from({length: years+1}, (_, year) => equity[year] + cumulativeAfterTaxCashFlow[year] - initialInvestment - capitalGainsTaxes[year]);
+
 
     document.getElementById('cashflowinfo').innerText = tabulate(cashFlows, 'Cash Flow');
     document.getElementById('cashflowinfo').innerText += '\n' + tabulate(maxNewLoanAmounts, 'Refinance');
@@ -161,7 +194,7 @@
 
     let zeros = Array.from({length: years+1}, (_, year) => 0);
 
-    investmentChart.data.labels = Array.from({length: years+1}, (_, i) => i + 30);
+    investmentChart.data.labels = Array.from({length: years+1}, (_, i) => i + 31);
     investmentChart.data.datasets = [
     {
         label: 'Property Value',
@@ -173,43 +206,76 @@
         data: mortgageBalance,
         backgroundColor: 'rgba(255, 0, 0, 0.8)',
       },
+      {
+        label: '+ Gross Rental Income',
+        data: rentalIncomes,
+        backgroundColor: 'rgba(255, 206, 86, 0.8)',
+      },
+      {
+        label: '- Operating Expenses',
+        data: operatingExpenses,
+        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+      },
+      {
+        label: '- Debt Service',
+        data: debtService,
+        backgroundColor: 'rgba(255, 159, 64, 0.8)',
+      },
+      {
+        label: '    incl. interest',
+        data: interestPaid,
+        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+      },
+      {
+        label: '    incl. principal',
+        data: principalPaid,
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+      },
+      {
+        label: '= Cash Flow (before tax)',
+        data: cashFlows,
+        backgroundColor: '#ffcc00',
+      },
+      {
+        label: '- Income Tax',
+        data: incomeTaxes,
+        backgroundColor: 'rgba(255, 0, 0, 0.5)',
+      },
+      {
+        label: '= Cash Flow (after tax)',
+        data: afterTaxCashFlow,
+        backgroundColor: '#ffcc00',
+      },
 
       {
-        label: '-',
+        label: '**** BEFORE TAX GAINS ****',
         data: zeros,
         backgroundColor: 'rgba(255, 0, 0, 0.)',
       },
 
       {
-        label: 'Debt Paid',
+        label: '+ Total Debt Paid',
         data: mortgageBalance.map((value, index) => mortgageBalance[0] - value),
         backgroundColor: 'rgba(255, 0, 0, 0.5)',
       },
       {
-        label: 'Property Appreciation',
-        data: propertyValues.map((value, index) => value - propertyPrice),
+        label: '+ Property Appreciation',
+        data: propertyAppreciation,
         backgroundColor: 'rgba(54, 162, 235, 0.8)',
       },
       {
-        label: 'Cumulative Cash Flow',
-        data: cumulativeCashFlows,
+        label: '+ Cumulative Cash Flow (after IncTax)',
+        data: cumulativeAfterTaxCashFlow,
         backgroundColor: '#00ff74',
       },
-
       {
-        label: '-',
-        data: zeros,
-        backgroundColor: 'rgba(255, 0, 0, 0.)',
-      },
-      
-      {
-        label: 'Monthly Flow',
-        data: cashFlows.map(cf => cf / 12),
-        backgroundColor: '#ffcc00',
+        label: '- Capital Gains Tax',
+        data: capitalGainsTaxes,
+        backgroundColor: 'rgba(255, 0, 0, 0.5)',
       },
       {
-        label: 'Rental Gains',
-        data: rentalGains,
+        label: '= Rental Gains (after tax)',
+        data: afterTaxRentalGains,
         type: 'line',
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
@@ -217,16 +283,11 @@
       },
 
       {
-        label: '-',
-        data: zeros,
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+        label: 'MONTHLY CASH FLOW (after tax)',
+        data: afterTaxCashFlow.map(cf => cf / 12),
+        backgroundColor: '#ffcc00',
       },
 
-      {
-        label: 'Equity',
-        data: equity,
-        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-      },
 
       {
         label: 'Max New Loan',
@@ -238,22 +299,149 @@
       },
 
       {
-        label: '-',
-        data: zeros,
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-      },
-
-      {
-        label: `Stock Gains (${(annualStockGrowth*100).toFixed(1)}%)`,
-        data: stockValues,
+        label: `Stock Gains (${(annualStockGrowth*100).toFixed(1)}%, after tax)`,
+        data: afterTaxStockGains,
         type: 'line',
         borderColor: 'rgb(255, 150, 40)',
         backgroundColor: 'rgba(255, 150, 40, 0.5)',
         fill: true,
       },
+
     ];
+
     investmentChart.update();
+
+
+
+    function generateCashflowInfo(i) {
+    const cashflowInfo = `
+      <div style="font-family: Arial, sans-serif;">
+        <h3>Year: ${i + 31}</h3>
+        <div>
+          <strong>Property Value:</strong> 
+          <span style="background-color: rgba(75, 192, 192, 0.8); padding: 1px; border-radius: 1px;">
+            ${propertyValues[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Mortgage Balance:</strong> 
+          <span style="background-color: rgba(255, 0, 0, 0.8); padding: 1px; border-radius: 1px;">
+            ${mortgageBalance[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Gross Rental Income:</strong> 
+          <span style="background-color: rgba(255, 206, 86, 0.8); padding: 1px; border-radius: 1px;">
+            ${rentalIncomes[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Operating Expenses:</strong> 
+          <span style="background-color: rgba(54, 162, 235, 0.8); padding: 1px; border-radius: 1px;">
+            ${operatingExpenses[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Debt Service:</strong> 
+          <span style="background-color: rgba(255, 159, 64, 0.8); padding: 1px; border-radius: 1px;">
+            ${debtService[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Interest Paid:</strong> 
+          <span style="background-color: rgba(255, 0, 0, 0.5); padding: 1px; border-radius: 1px;">
+            ${interestPaid[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Principal Paid:</strong> 
+          <span style="background-color: rgba(255, 0, 0, 0.2); padding: 1px; border-radius: 1px;">
+            ${principalPaid[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Cash Flow (before tax):</strong> 
+          <span style="background-color: #ffcc00; padding: 1px; border-radius: 1px;">
+            ${cashFlows[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Income Tax:</strong> 
+          <span style="background-color: rgba(255, 0, 0, 0.5); padding: 1px; border-radius: 1px;">
+            ${incomeTaxes[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Cash Flow (after tax):</strong> 
+          <span style="background-color: #ffcc00; padding: 1px; border-radius: 1px;">
+            ${afterTaxCashFlow[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Total Debt Paid:</strong> 
+          <span style="background-color: rgba(255, 0, 0, 0.5); padding: 1px; border-radius: 1px;">
+            ${(mortgageBalance[0] - mortgageBalance[i]).toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Property Appreciation:</strong> 
+          <span style="background-color: rgba(54, 162, 235, 0.8); padding: 1px; border-radius: 1px;">
+            ${propertyAppreciation[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Cumulative Cash Flow (after Income Tax):</strong> 
+          <span style="background-color: #00ff74; padding: 1px; border-radius: 1px;">
+            ${cumulativeAfterTaxCashFlow[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Capital Gains Tax:</strong> 
+          <span style="background-color: rgba(255, 0, 0, 0.5); padding: 1px; border-radius: 1px;">
+            ${capitalGainsTaxes[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Rental Gains (after tax):</strong> 
+          <span style="background-color: rgba(75, 192, 192, 0.5); padding: 1px; border-radius: 1px;">
+            ${afterTaxRentalGains[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>YEAR 0 Monthly Cash Flow (after tax):</strong> 
+          <span style="background-color: #ffcc00; padding: 1px; border-radius: 1px;">
+            ${(afterTaxCashFlow[0] / 12).toLocaleString()}
+          </span>
+        <div>
+          <strong>YEAR ${i} Monthly Cash Flow (after tax):</strong> 
+          <span style="background-color: #ffcc00; padding: 1px; border-radius: 1px;">
+            ${(afterTaxCashFlow[i] / 12).toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Max New Loan:</strong> 
+          <span style="background-color: rgba(255, 255, 0, 0.5); padding: 1px; border-radius: 1px;">
+            ${maxNewLoanAmounts[i].toLocaleString()}
+          </span>
+        </div>
+        <div>
+          <strong>Stock Gains (${(annualStockGrowth * 100).toFixed(1)}%, after tax):</strong> 
+          <span style="background-color: rgba(255, 150, 40, 0.5); padding: 1px; border-radius: 1px;">
+            ${afterTaxStockGains[i].toLocaleString()}
+          </span>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('cashflowinfo').innerHTML = cashflowInfo;
   }
+  const year_of_interest = parseInt(document.getElementById('year').value);
+  generateCashflowInfo(year_of_interest);
+
+
+  }
+
+
 
   document.querySelectorAll('input[type="range"]').forEach(input => {
     input.addEventListener('input', function() {
@@ -378,5 +566,6 @@
   };
 
 </script>
+
 </body>
 </html>
