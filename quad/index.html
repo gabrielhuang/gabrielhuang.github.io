@@ -183,7 +183,7 @@
     let cumulativeAfterTaxCashFlow = afterTaxCashFlow.reduce((acc, curr, index) => [...acc, (acc[index-1] || 0) + curr], []);
 
     let propertyAppreciation = Array.from({length: years+1}, (_, year) => propertyValues[year] - propertyPrice);
-    let capitalGainsTaxes = Array.from({length: years+1}, (_, year) => propertyAppreciation[year] * 0.5 * taxRate);
+    let capitalGainsTaxes = Array.from({length: years+1}, (_, year) => propertyAppreciation[year] * 0.5 * 0.5);
 
     let afterTaxRentalGains = Array.from({length: years+1}, (_, year) => equity[year] + cumulativeAfterTaxCashFlow[year] - initialInvestment - capitalGainsTaxes[year]);
 
