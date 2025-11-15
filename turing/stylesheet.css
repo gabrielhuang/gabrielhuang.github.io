@@ -100,3 +100,274 @@ div.copyright
     font-weight: normal;
     font-size: 15px;
 }
+
+/* Mobile-responsive layout */
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.canvas-section {
+    flex-shrink: 0;
+}
+
+.canvas_frame {
+    width: 512px;
+    height: 512px;
+}
+
+.controls-section {
+    flex: 1;
+    max-width: 600px;
+    text-align: center;
+}
+
+.description-text {
+    max-width: 600px;
+}
+
+/* Button controls styling */
+.button-controls {
+    background: transparent;
+    border: 2px solid rgb(255, 255, 255);
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.control-group {
+    margin: 6px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.control-group strong {
+    margin-right: 4px;
+    font-size: 0.85em;
+    font-weight: bold;
+    min-width: fit-content;
+}
+
+.control-group button {
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #000;
+    border: 2px solid rgb(255, 255, 255);
+    color: white;
+    font-family: "Arial", sans-serif;
+    transition: none;
+    min-height: 36px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Only apply hover on devices that support true hover */
+@media (hover: hover) and (pointer: fine) {
+    .control-group button:hover {
+        background: rgb(255, 255, 255);
+        color: #000;
+    }
+}
+
+.control-group button:active {
+    transform: scale(0.96);
+    background: rgb(200, 200, 200);
+}
+
+/* Color button container */
+#colorButtonsContainer {
+    display: inline-flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+/* Speed and size display spans */
+#speedDisplay, #cursorSizeDisplay {
+    color: white;
+    font-family: "Arial", sans-serif;
+    text-align: center;
+}
+
+/* Toggle button styles */
+.toggle-button {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.toggle-button.active {
+    background: white;
+    color: #000;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .toggle-button:not(.active):hover {
+        background: rgb(255, 255, 255);
+        color: #000;
+    }
+    
+    .toggle-button.active:hover {
+        background: rgb(200, 200, 200);
+    }
+}
+
+/* Mobile-specific styles */
+@media screen and (max-width: 768px) {
+    body {
+        overflow: hidden;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+    
+    h1.title {
+        font-size: 20px;
+        margin: 6px 0;
+        padding: 0;
+    }
+    
+    .main-container {
+        flex-direction: column;
+        height: calc(100vh - 32px); /* Account for title */
+        gap: 0;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+    
+    .canvas-section {
+        flex-shrink: 0;
+        width: 100%;
+        padding: 5px;
+        box-sizing: border-box;
+    }
+    
+    .canvas_frame {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+        max-width: min(512px, 100vw - 10px);
+        margin: 0 auto;
+    }
+    
+    .canvas_frame canvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+    
+    .controls-section {
+        flex: 1;
+        width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .controls-section form {
+        max-width: 100%;
+    }
+    
+    /* Compact controls */
+    .controls-section > form > div {
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+    }
+    
+    .button-controls {
+        padding: 6px;
+        margin-bottom: 6px;
+    }
+    
+    .control-group {
+        margin: 3px 0;
+        gap: 4px;
+    }
+    
+    .control-group strong {
+        font-size: 11px;
+        margin-right: 3px;
+    }
+    
+    .control-group button {
+        padding: 10px 12px;
+        font-size: 13px;
+        min-height: 40px;
+        flex: 0 0 auto;
+    }
+    
+    /* Make color buttons more compact */
+    .control-group button[onclick^="setCursorColor"] {
+        padding: 8px 10px;
+        min-width: 40px;
+    }
+    
+    .description-text {
+        font-size: 0.75em !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+        line-height: 1.3;
+    }
+    
+    #transitionTable {
+        max-width: 100% !important;
+        font-size: 0.75em !important;
+    }
+    
+    #shareButton {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    input[type="number"] {
+        width: 2.5em;
+        font-size: 13px;
+    }
+    
+    /* Hide copyright on mobile to save space */
+    .copyright {
+        display: none;
+    }
+}
+
+/* Very small screens */
+@media screen and (max-width: 480px) {
+    .canvas_frame {
+        max-width: calc(100vw - 10px);
+    }
+    
+    h1.title {
+        font-size: 18px;
+        margin: 4px 0;
+    }
+    
+    .control-group strong {
+        font-size: 10px;
+    }
+    
+    .control-group button {
+        padding: 9px 10px;
+        font-size: 12px;
+        min-height: 38px;
+    }
+    
+    .control-group button[onclick^="setCursorColor"] {
+        padding: 7px 8px;
+        min-width: 36px;
+    }
+    
+    .description-text {
+        font-size: 0.7em !important;
+    }
+    
+    #transitionTable {
+        font-size: 0.7em !important;
+    }
+}

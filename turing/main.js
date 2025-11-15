@@ -57,9 +57,8 @@ Transition table history
 */
 var tableHistory = [];
 var MAX_HISTORY = 20;
-var currentHistoryIndex = -1; // -1 means we're at the latest state (not in history)
-var tableCounter = 0; // Incrementing counter for each table, never reused
-var autoRestart = false; // Auto-restart on table changes
+var historyCursor = -1; // Points to current position in history (index in array)
+var autoRestart = true; // Auto-restart on table changes
 
 /**
 Get color name for display
@@ -75,18 +74,131 @@ function getColorName(index) {
 Update cursor info display
 */
 function updateCursorInfo() {
-    document.getElementById('cursorSize').textContent = cursor.size;
-    document.getElementById('cursorColor').textContent = getColorName(cursor.colorIndex);
-    document.getElementById('cursorSymbol').textContent = cursor.colorIndex === 9 ? 'Random' : cursor.colorIndex;
+    var cursorSizeElem = document.getElementById('cursorSize');
+    var cursorColorElem = document.getElementById('cursorColor');
+    var cursorSymbolElem = document.getElementById('cursorSymbol');
+    var cursorSizeDisplay = document.getElementById('cursorSizeDisplay');
+    
+    if (cursorSizeElem) cursorSizeElem.textContent = cursor.size;
+    if (cursorColorElem) cursorColorElem.textContent = getColorName(cursor.colorIndex);
+    if (cursorSymbolElem) cursorSymbolElem.textContent = cursor.colorIndex === 9 ? 'Random' : cursor.colorIndex;
+    if (cursorSizeDisplay) cursorSizeDisplay.textContent = cursor.size;
+}
+
+/**
+Render color buttons based on current number of symbols
+*/
+function renderColorButtons() {
+    var container = document.getElementById('colorButtonsContainer');
+    if (!container) return;
+    
+    var numSymbols = program.numSymbols;
+    var html = '';
+    
+    for (var i = 0; i < numSymbols; i++) {
+        var color = getSymbolColor(i);
+        html += '<button type="button" onclick="setCursorColor(' + i + ');" title="Color ' + i + '" ';
+        html += 'style="padding: 0; width: 28px; height: 28px; min-height: 28px; border: 2px solid white; background: ' + color + ';">';
+        html += '<span style="color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-weight: bold; font-size: 11px;">' + i + '</span>';
+        html += '</button>';
+    }
+    
+    container.innerHTML = html;
+}
+
+/**
+Initialize all sliders
+*/
+function initializeSliders() {
+    // Speed and Size sliders
+    var speedSizeContainer = document.getElementById('speedSizeSliders');
+    if (speedSizeContainer) {
+        // Speed slider (using speed index 0-6)
+        var speedSlider = createSlider('Simulation speed (-/+)', 'speed', 0, SPEED_LEVELS.length - 1, currentSpeedIndex, 1, function(value) {
+            currentSpeedIndex = parseInt(value);
+            updateSpeedInfo();
+            updateSpeedSliderDisplay();
+        });
+        speedSizeContainer.appendChild(speedSlider);
+        
+        // Cursor size slider
+        var sizeSlider = createSlider('Cursor size (Z/X)', 'cursorSize', 5, 200, cursor.size, 5, function(value) {
+            cursor.size = parseInt(value);
+            updateCursorInfo();
+        });
+        speedSizeContainer.appendChild(sizeSlider);
+    }
+    
+    // Update speed slider to show actual speed value
+    updateSpeedSliderDisplay();
+    
+    // Update states and symbols display
+    updateStatesSymbolsDisplay();
+}
+
+/**
+Adjust number of states
+*/
+function adjustStates(delta) {
+    var newStates = Math.max(1, Math.min(24, program.numStates + delta));
+    if (newStates !== program.numStates) {
+        randomProg();
+    }
+}
+
+/**
+Adjust number of symbols
+*/
+function adjustSymbols(delta) {
+    var newSymbols = Math.max(2, Math.min(12, program.numSymbols + delta));
+    if (newSymbols !== program.numSymbols) {
+        randomProg();
+    }
+}
+
+/**
+Update states and symbols display
+*/
+function updateStatesSymbolsDisplay() {
+    var statesDisplay = document.getElementById('statesDisplay');
+    var symbolsDisplay = document.getElementById('symbolsDisplay');
+    if (statesDisplay) statesDisplay.textContent = program.numStates;
+    if (symbolsDisplay) symbolsDisplay.textContent = program.numSymbols;
+}
+
+/**
+Update the speed slider display to show the actual speed value instead of index
+*/
+function updateSpeedSliderDisplay() {
+    var valueDisplay = document.getElementById('speedValue');
+    if (valueDisplay) {
+        valueDisplay.textContent = SPEED_LEVELS[currentSpeedIndex];
+    }
 }
 
 /**
 Check if auto-restart is enabled and trigger restart if so
 */
 function checkAutoRestart() {
-    var checkbox = document.getElementById('autoRestart');
-    if (checkbox && checkbox.checked) {
+    if (autoRestart) {
         restartProg();
+    }
+}
+
+/**
+Toggle auto-restart state
+*/
+function toggleAutoRestart() {
+    autoRestart = !autoRestart;
+    var btn = document.getElementById('autoRestartBtn');
+    if (btn) {
+        if (autoRestart) {
+            btn.classList.add('active');
+            btn.textContent = 'Auto-restart: ON';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = 'Auto-restart: OFF';
+        }
     }
 }
 
@@ -94,44 +206,26 @@ function checkAutoRestart() {
 Save current table to history
 */
 function saveToHistory() {
-    // Create a copy of the current table
-    var tableCopy = program.table.slice();
-    
-    // If we're in the middle of history (viewing old state), discard all future history
-    if (currentHistoryIndex >= 0) {
-        // Remove all entries before currentHistoryIndex (those are the "future" we're discarding)
-        tableHistory.splice(0, currentHistoryIndex);
-        currentHistoryIndex = -1; // Back to latest
-        // Clear any saved snapshot
-        window.currentStateSnapshot = null;
-        
-        // Set the counter to continue from current table number
-        // Get the number from the first history entry (which is the one we just went back to)
-        if (tableHistory.length > 0) {
-            tableCounter = tableHistory[0].number;
-        }
+    // If viewing old state, discard all future history
+    if (historyCursor < tableHistory.length - 1) {
+        tableHistory.splice(historyCursor + 1);
     }
-    
-    // Increment from wherever we are now
-    tableCounter++;
     
     var historyEntry = {
-        table: tableCopy,
+        table: program.table.slice(),
         numStates: program.numStates,
-        numSymbols: program.numSymbols,
-        number: tableCounter
+        numSymbols: program.numSymbols
     };
     
-    // Add to beginning of history
-    tableHistory.unshift(historyEntry);
+    // Add to end of history (index becomes version number)
+    tableHistory.push(historyEntry);
     
-    // Limit history size
+    // Limit history size (remove from beginning)
     if (tableHistory.length > MAX_HISTORY) {
-        // Remove from end
-        tableHistory.pop();
+        tableHistory.shift();
     }
     
-    // Update history UI
+    historyCursor = tableHistory.length - 1;
     renderHistory();
 }
 
@@ -139,25 +233,10 @@ function saveToHistory() {
 Go back in history (undo)
 */
 function historyUndo() {
-    if (currentHistoryIndex === -1) {
-        // We're at latest, save current state first, then go to index 0
-        if (tableHistory.length > 0) {
-            // Save the current state as a temporary snapshot (not added to history)
-            window.currentStateSnapshot = {
-                table: program.table.slice(),
-                numStates: program.numStates,
-                numSymbols: program.numSymbols,
-                number: tableCounter
-            };
-            
-            currentHistoryIndex = 0;
-            restoreFromHistory(0);
-            showNotification('Undo → Table #' + tableHistory[0].number);
-        }
-    } else if (currentHistoryIndex < tableHistory.length - 1) {
-        currentHistoryIndex++;
-        restoreFromHistory(currentHistoryIndex);
-        showNotification('Undo → Table #' + tableHistory[currentHistoryIndex].number);
+    if (historyCursor > 0) {
+        historyCursor--;
+        restoreFromHistory(historyCursor);
+        showNotification('Undo → v' + historyCursor);
     }
 }
 
@@ -165,24 +244,10 @@ function historyUndo() {
 Go forward in history (redo)
 */
 function historyRedo() {
-    if (currentHistoryIndex > 0) {
-        currentHistoryIndex--;
-        restoreFromHistory(currentHistoryIndex);
-        showNotification('Redo → Table #' + tableHistory[currentHistoryIndex].number);
-    } else if (currentHistoryIndex === 0 && window.currentStateSnapshot) {
-        // Go back to latest (restore the snapshot we saved)
-        var snapshot = window.currentStateSnapshot;
-        currentHistoryIndex = -1;
-        tableCounter = snapshot.number;
-        program.table = snapshot.table.slice();
-        
-        // Clear the snapshot immediately
-        window.currentStateSnapshot = null;
-        
-        renderTransitionTable();
-        updateShareURL();
-        renderHistory();
-        showNotification('Redo → Table #' + snapshot.number);
+    if (historyCursor < tableHistory.length - 1) {
+        historyCursor++;
+        restoreFromHistory(historyCursor);
+        showNotification('Redo → v' + historyCursor);
     }
 }
 
@@ -216,16 +281,11 @@ function restoreFromHistory(index) {
     
     // Only restore if dimensions match
     if (entry.numStates === program.numStates && entry.numSymbols === program.numSymbols) {
-        currentHistoryIndex = index;
-        tableCounter = entry.number; // Show the historical table number
         program.table = entry.table.slice();
         renderTransitionTable();
         updateShareURL();
         renderHistory();
         checkAutoRestart();
-        console.log('Restored history #' + entry.number);
-    } else {
-        console.log('Cannot restore: dimension mismatch');
     }
 }
 
@@ -237,13 +297,11 @@ function renderHistory() {
     var nextButton = document.getElementById('historyNext');
     
     if (prevButton) {
-        // Can go back if we're at latest (index -1) and have history, or if we can go deeper
-        prevButton.disabled = !(currentHistoryIndex === -1 && tableHistory.length > 0) && !(currentHistoryIndex < tableHistory.length - 1);
+        prevButton.disabled = historyCursor <= 0;
     }
     
     if (nextButton) {
-        // Can go forward if we're in history (index >= 0)
-        nextButton.disabled = currentHistoryIndex < 0;
+        nextButton.disabled = historyCursor >= tableHistory.length - 1;
     }
 }
 
@@ -254,10 +312,35 @@ function updateShareURL() {
     var str = program.toString();
     var url = location.protocol + '//' + location.host + location.pathname;
     var shareURL = url + '#' + str;
-    document.getElementById("shareURL").value = shareURL;
     
     // Update browser URL without reloading
     window.location.hash = str;
+}
+
+/**
+Copy shareable URL to clipboard and show confirmation
+*/
+function shareDrawing() {
+    var str = program.toString();
+    var url = location.protocol + '//' + location.host + location.pathname;
+    var shareURL = url + '#' + str;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareURL).then(function() {
+        // Show confirmation message
+        var button = document.getElementById('shareButton');
+        var originalText = button.innerHTML;
+        button.innerHTML = '✓ URL Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(function() {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(function(err) {
+        // Fallback: show prompt with URL
+        prompt('Copy this URL to share your drawing:', shareURL);
+    });
 }
 
 /**
@@ -281,8 +364,7 @@ function writeCursorToMap() {
                 
                 // If random mode (9), pick random color for each pixel
                 if (cursor.colorIndex === 9) {
-                    var numSymbols = parseInt(document.getElementById("numSymbols").value);
-                    program.map[mapIndex] = Math.floor(Math.random() * numSymbols);
+                    program.map[mapIndex] = Math.floor(Math.random() * program.numSymbols);
                 } else {
                     program.map[mapIndex] = cursor.colorIndex;
                 }
@@ -296,7 +378,11 @@ Update simulation speed display
 */
 function updateSpeedInfo() {
     UPDATE_ITRS = SPEED_LEVELS[currentSpeedIndex];
-    document.getElementById('speedInfo').textContent = UPDATE_ITRS;
+    var speedInfoElem = document.getElementById('speedInfo');
+    var speedDisplayElem = document.getElementById('speedDisplay');
+    
+    if (speedInfoElem) speedInfoElem.textContent = UPDATE_ITRS;
+    if (speedDisplayElem) speedDisplayElem.textContent = UPDATE_ITRS;
     console.log('Simulation speed: ' + UPDATE_ITRS + ' iterations per update');
 }
 
@@ -387,17 +473,22 @@ Glitch: Randomize all actions
 function glitchRandomizeActions() {
     saveToHistory();
     
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            program.table[idx + 2] = randomInt(0, 3);
-        }
+    // Calculate total number of table entries
+    var totalEntries = program.numStates * program.numSymbols;
+    var numToChange = Math.ceil(totalEntries * 0.2);
+    
+    // Randomly select entries to change
+    for (var i = 0; i < numToChange; i++) {
+        var st = randomInt(0, program.numStates - 1);
+        var sy = randomInt(0, program.numSymbols - 1);
+        var idx = (program.numStates * sy + st) * 3;
+        program.table[idx + 2] = randomInt(0, 3);
     }
     
     renderTransitionTable();
     updateShareURL();
     checkAutoRestart();
-    console.log('Randomized all actions');
+    console.log('Randomized 20% of actions');
 }
 
 /**
@@ -406,17 +497,22 @@ Glitch: Randomize all states
 function glitchRandomizeStates() {
     saveToHistory();
     
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            program.table[idx + 0] = randomInt(0, program.numStates - 1);
-        }
+    // Calculate total number of table entries
+    var totalEntries = program.numStates * program.numSymbols;
+    var numToChange = Math.ceil(totalEntries * 0.2);
+    
+    // Randomly select entries to change
+    for (var i = 0; i < numToChange; i++) {
+        var st = randomInt(0, program.numStates - 1);
+        var sy = randomInt(0, program.numSymbols - 1);
+        var idx = (program.numStates * sy + st) * 3;
+        program.table[idx + 0] = randomInt(0, program.numStates - 1);
     }
     
     renderTransitionTable();
     updateShareURL();
     checkAutoRestart();
-    console.log('Randomized all states');
+    console.log('Randomized 20% of states');
 }
 
 /**
@@ -425,17 +521,22 @@ Glitch: Randomize all symbols (colors)
 function glitchRandomizeSymbols() {
     saveToHistory();
     
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            program.table[idx + 1] = randomInt(0, program.numSymbols - 1);
-        }
+    // Calculate total number of table entries
+    var totalEntries = program.numStates * program.numSymbols;
+    var numToChange = Math.ceil(totalEntries * 0.2);
+    
+    // Randomly select entries to change
+    for (var i = 0; i < numToChange; i++) {
+        var st = randomInt(0, program.numStates - 1);
+        var sy = randomInt(0, program.numSymbols - 1);
+        var idx = (program.numStates * sy + st) * 3;
+        program.table[idx + 1] = randomInt(0, program.numSymbols - 1);
     }
     
     renderTransitionTable();
     updateShareURL();
     checkAutoRestart();
-    console.log('Randomized all symbols');
+    console.log('Randomized 20% of symbols');
 }
 
 /**
@@ -479,188 +580,6 @@ function glitchRandomizeAll() {
     updateShareURL();
     checkAutoRestart();
     console.log('Randomized all table entries');
-}
-
-/**
-Analyze transition table for patterns and properties
-*/
-function analyzeTransitionTable() {
-    console.log('\n=== TRANSITION TABLE ANALYSIS ===');
-    
-    // 1. Calculate entropy (measure of randomness)
-    var entropy = calculateTableEntropy();
-    console.log('Table Entropy: ' + entropy.toFixed(3) + ' (0=ordered, higher=chaotic)');
-    
-    // 2. Detect state cycles
-    var cycles = detectStateCycles();
-    console.log('State Cycles Found: ' + cycles.length);
-    cycles.forEach(function(cycle, i) {
-        console.log('  Cycle ' + (i+1) + ': ' + cycle.join(' → ') + ' → ' + cycle[0]);
-    });
-    
-    // 3. Analyze symbol distribution
-    var symbolStats = analyzeSymbolDistribution();
-    console.log('Symbol Write Distribution:');
-    for (var i = 0; i < symbolStats.length; i++) {
-        console.log('  Symbol ' + i + ': ' + symbolStats[i].toFixed(1) + '%');
-    }
-    
-    // 4. Analyze action bias
-    var actionStats = analyzeActionDistribution();
-    var actionNames = ['→ (Right)', '← (Left)', '↑ (Up)', '↓ (Down)'];
-    console.log('Action Distribution:');
-    for (var i = 0; i < 4; i++) {
-        console.log('  ' + actionNames[i] + ': ' + actionStats[i].toFixed(1) + '%');
-    }
-    
-    // 5. Check for fixed points (state maps to itself)
-    var fixedPoints = findFixedPoints();
-    if (fixedPoints.length > 0) {
-        console.log('Fixed Points (state→state): ' + fixedPoints.join(', '));
-    }
-    
-    // 6. Estimate complexity
-    var complexity = estimateComplexity(entropy, cycles.length, fixedPoints.length);
-    console.log('Estimated Complexity: ' + complexity);
-    
-    console.log('================================\n');
-    
-}
-
-/**
-Calculate Shannon entropy of the transition table
-*/
-function calculateTableEntropy() {
-    var transitions = {};
-    var total = 0;
-    
-    // Count each unique transition
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            var key = program.table[idx] + ',' + program.table[idx+1] + ',' + program.table[idx+2];
-            transitions[key] = (transitions[key] || 0) + 1;
-            total++;
-        }
-    }
-    
-    // Calculate Shannon entropy
-    var entropy = 0;
-    for (var key in transitions) {
-        var p = transitions[key] / total;
-        entropy -= p * Math.log2(p);
-    }
-    
-    return entropy;
-}
-
-/**
-Detect cycles in state transitions
-*/
-function detectStateCycles() {
-    var cycles = [];
-    var visited = new Array(program.numStates).fill(false);
-    
-    for (var startState = 0; startState < program.numStates; startState++) {
-        if (visited[startState]) continue;
-        
-        var path = [];
-        var state = startState;
-        var stateSet = {};
-        
-        // Follow state transitions (using symbol 0)
-        while (!stateSet[state] && path.length < program.numStates * 2) {
-            stateSet[state] = true;
-            path.push(state);
-            visited[state] = true;
-            
-            // Get next state for symbol 0
-            var idx = (program.numStates * 0 + state) * 3;
-            state = program.table[idx];
-        }
-        
-        // Check if we found a cycle
-        var cycleStart = path.indexOf(state);
-        if (cycleStart >= 0 && cycleStart < path.length - 1) {
-            var cycle = path.slice(cycleStart);
-            if (cycle.length > 1 || (cycle.length === 1 && cycle[0] === state)) {
-                cycles.push(cycle);
-            }
-        }
-    }
-    
-    return cycles;
-}
-
-/**
-Analyze symbol write distribution
-*/
-function analyzeSymbolDistribution() {
-    var counts = new Array(program.numSymbols).fill(0);
-    var total = program.numStates * program.numSymbols;
-    
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            var symbol = program.table[idx + 1];
-            counts[symbol]++;
-        }
-    }
-    
-    return counts.map(function(c) { return (c / total) * 100; });
-}
-
-/**
-Analyze action distribution
-*/
-function analyzeActionDistribution() {
-    var counts = [0, 0, 0, 0];
-    var total = program.numStates * program.numSymbols;
-    
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            var action = program.table[idx + 2];
-            counts[action]++;
-        }
-    }
-    
-    return counts.map(function(c) { return (c / total) * 100; });
-}
-
-/**
-Find fixed points (states that transition to themselves)
-*/
-function findFixedPoints() {
-    var fixedPoints = [];
-    
-    for (var st = 0; st < program.numStates; st++) {
-        var isFixed = true;
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            if (program.table[idx] !== st) {
-                isFixed = false;
-                break;
-            }
-        }
-        if (isFixed) {
-            fixedPoints.push(st);
-        }
-    }
-    
-    return fixedPoints;
-}
-
-/**
-Estimate overall complexity based on various metrics
-*/
-function estimateComplexity(entropy, numCycles, numFixed) {
-    // Simple heuristic classification
-    if (numFixed > program.numStates / 2) return 'Simple/Convergent';
-    if (entropy < 1.0) return 'Ordered/Repetitive';
-    if (numCycles > 0 && entropy < 2.5) return 'Periodic/Cyclic';
-    if (entropy > 3.5) return 'Chaotic/Complex';
-    return 'Moderate/Structured';
 }
 
 /**
@@ -710,8 +629,11 @@ function renderTransitionTable() {
     // Update table number in header
     var tableNumberDisplay = document.getElementById('tableNumberDisplay');
     if (tableNumberDisplay) {
-        tableNumberDisplay.textContent = tableCounter;
+        tableNumberDisplay.textContent = 'v' + historyCursor;
     }
+    
+    // Update button states via renderHistory()
+    renderHistory();
 }
 
 /**
@@ -772,10 +694,16 @@ function init()
     // Create an image data array
     canvas.imgData = canvas.ctx.createImageData(canvas.width, canvas.height);
 
-    // If a location hash is specified
+    // Create a default program first (sliders need program to exist)
+    program = new Program(4, 3, canvas.width, canvas.height);
+    
+    // Now initialize sliders (they can safely reference program)
+    initializeSliders();
+    
+    // If a location hash is specified, load it
     if (location.hash !== '')
     {
-        console.log('parsing program');
+        console.log('parsing program from hash');
 
         program = Program.fromString(
             location.hash.substr(1),
@@ -783,41 +711,33 @@ function init()
             canvas.height
         );
         
-        // Update the input fields to match the loaded program
-        document.getElementById('numStates').value = program.numStates;
-        document.getElementById('numSymbols').value = program.numSymbols;
+        // Update the displays to match the loaded program
+        updateStatesSymbolsDisplay();
         
         // Update share URL
         updateShareURL();
     }
     else
     {
-        // Create a random program
-        randomProg();
+        console.log('no program in URL, using default random program');
+        
+        // Already created above with default 4 states, 3 symbols
+        // Update share URL for the default program
+        updateShareURL();
     }
+    
+    // Save initial state to history as v0
+    saveToHistory();
+    
+    // Render UI elements now that program is ready
+    renderColorButtons();
+    renderTransitionTable();
 
     // Set the update function to be called regularly
     updateInterv = setInterval(
         updateRender,
         UPDATE_TIME
     );
-
-    // Add listeners to num states and num symbols inputs
-    document.getElementById('numStates').addEventListener('change', function() {
-        // Only randomize if the number of states changed
-        var newStates = parseInt(this.value);
-        if (newStates !== program.numStates) {
-            randomProg();
-        }
-    });
-    
-    document.getElementById('numSymbols').addEventListener('change', function() {
-        // Only randomize if the number of symbols changed
-        var newSymbols = parseInt(this.value);
-        if (newSymbols !== program.numSymbols) {
-            randomProg();
-        }
-    });
 
     // Add mouse move event listener for cursor
     canvas.addEventListener('mousemove', function(e) {
@@ -916,6 +836,7 @@ function init()
         // X to increase size
         if (key === 'x') {
             cursor.size = Math.min(cursor.size + 5, 200);
+            updateSliderValue('cursorSize', cursor.size);
             updateCursorInfo();
             showNotification('Cursor size: ' + cursor.size);
             e.preventDefault();
@@ -923,6 +844,7 @@ function init()
         // Z to decrease size
         else if (key === 'z') {
             cursor.size = Math.max(cursor.size - 5, 5);
+            updateSliderValue('cursorSize', cursor.size);
             updateCursorInfo();
             showNotification('Cursor size: ' + cursor.size);
             e.preventDefault();
@@ -931,7 +853,9 @@ function init()
         else if (key === '+' || key === '=') {
             if (currentSpeedIndex < SPEED_LEVELS.length - 1) {
                 currentSpeedIndex++;
+                updateSliderValue('speed', currentSpeedIndex);
                 updateSpeedInfo();
+                updateSpeedSliderDisplay();
                 showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
             }
             e.preventDefault();
@@ -940,14 +864,15 @@ function init()
         else if (key === '-' || key === '_') {
             if (currentSpeedIndex > 0) {
                 currentSpeedIndex--;
+                updateSliderValue('speed', currentSpeedIndex);
                 updateSpeedInfo();
+                updateSpeedSliderDisplay();
                 showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
             }
             e.preventDefault();
         }
         // 0-8 to set colors, 9 for random mode
         else if (key >= '0' && key <= '9') {
-            var numSymbols = parseInt(document.getElementById("numSymbols").value);
             var colorIndex = parseInt(key);
             
             // Special case: 9 is random mode
@@ -956,7 +881,7 @@ function init()
                 showNotification('Cursor: Random mode');
             }
             // Only allow color indices that exist
-            else if (colorIndex < numSymbols && colorIndex < colorMap.length / 3) {
+            else if (colorIndex < program.numSymbols && colorIndex < colorMap.length / 3) {
                 cursor.colorIndex = colorIndex;
                 showNotification('Cursor: ' + getColorName(colorIndex));
             }
@@ -1007,22 +932,15 @@ function init()
             showNotification('Randomized all');
             e.preventDefault();
         }
-        // A for analyze table
-        else if (key === 'a') {
-            analyzeTransitionTable();
-            showNotification('Analysis in console');
-            e.preventDefault();
-        }
     }, false);
-
+    
     // Initialize cursor info display
     updateCursorInfo();
     
     // Initialize speed
     updateSpeedInfo();
     
-    // Render transition table
-    renderTransitionTable();
+    // Update active cell in transition table
     updateActiveCell();
 }
 window.addEventListener("load", init, false);
@@ -1032,8 +950,11 @@ Generate a new random program
 */
 function randomProg()
 {
-    var numStates = parseInt(document.getElementById("numStates").value);
-    var numSymbols = parseInt(document.getElementById("numSymbols").value);
+    var statesDisplay = document.getElementById('statesDisplay');
+    var symbolsDisplay = document.getElementById('symbolsDisplay');
+    
+    var numStates = statesDisplay ? parseInt(statesDisplay.textContent) : 4;
+    var numSymbols = symbolsDisplay ? parseInt(symbolsDisplay.textContent) : 3;
 
     assert (
         numSymbols <= colorMap.length,
@@ -1048,6 +969,12 @@ function randomProg()
     // Update the sharing URL
     updateShareURL();
     
+    // Update displays
+    updateStatesSymbolsDisplay();
+    
+    // Re-render color buttons (numSymbols may have changed)
+    renderColorButtons();
+    
     // Re-render transition table
     renderTransitionTable();
 }
@@ -1058,6 +985,32 @@ Reset the program state
 function restartProg()
 {
     program.reset();
+}
+
+/**
+Reset to default 4 states, 3 symbols program
+*/
+function resetProgram()
+{
+    // Create new program with default settings
+    program = new Program(4, 3, canvas.width, canvas.height);
+    
+    // Update the displays
+    updateStatesSymbolsDisplay();
+    
+    // Update share URL
+    updateShareURL();
+    
+    // Re-render color buttons
+    renderColorButtons();
+    
+    // Re-render transition table
+    renderTransitionTable();
+    
+    // Save to history
+    saveToHistory();
+    
+    showNotification('Reset to default (4 states, 3 symbols)');
 }
 
 // Default console logging function implementation
@@ -1100,6 +1053,58 @@ Available simulation speeds (logarithmic scale)
 */
 var SPEED_LEVELS = [1, 10, 100, 1000, 10000, 100000, 1000000];
 var currentSpeedIndex = 4;
+
+/**
+Button control functions - wrappers for keyboard shortcuts
+*/
+function increaseSpeed() {
+    if (currentSpeedIndex < SPEED_LEVELS.length - 1) {
+        currentSpeedIndex++;
+        updateSliderValue('speed', currentSpeedIndex);
+        updateSpeedInfo();
+        updateSpeedSliderDisplay();
+        showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
+    }
+}
+
+function decreaseSpeed() {
+    if (currentSpeedIndex > 0) {
+        currentSpeedIndex--;
+        updateSliderValue('speed', currentSpeedIndex);
+        updateSpeedInfo();
+        updateSpeedSliderDisplay();
+        showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
+    }
+}
+
+function increaseBrushSize() {
+    cursor.size = Math.min(cursor.size + 5, 200);
+    updateSliderValue('cursorSize', cursor.size);
+    updateCursorInfo();
+    showNotification('Cursor size: ' + cursor.size);
+}
+
+function decreaseBrushSize() {
+    cursor.size = Math.max(cursor.size - 5, 5);
+    updateSliderValue('cursorSize', cursor.size);
+    updateCursorInfo();
+    showNotification('Cursor size: ' + cursor.size);
+}
+
+function setCursorColor(colorIndex) {
+    // Special case: 9 is random mode
+    if (colorIndex === 9) {
+        cursor.colorIndex = 9;
+        showNotification('Cursor: Random mode');
+    }
+    // Only allow color indices that exist
+    else if (colorIndex < program.numSymbols && colorIndex < colorMap.length / 3) {
+        cursor.colorIndex = colorIndex;
+        showNotification('Cursor: ' + getColorName(colorIndex));
+    }
+    
+    updateCursorInfo();
+}
 
 /**
 Throttle transition table updates
