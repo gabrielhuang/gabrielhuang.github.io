@@ -1,0 +1,21 @@
+/* Stepper component styles */
+.stepper-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 4px 0;
+}
+
+.stepper-button {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stepper-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stepper-value {
+    user-select: none;
+}

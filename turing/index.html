@@ -10,11 +10,13 @@
         <script language="javascript" src="utils-html.js"></script>
         <script language="javascript" src="utils-misc.js"></script>
         <script language="javascript" src="slider.js"></script>
+        <script language="javascript" src="stepper.js"></script>
         <script language="javascript" src="main.js"></script>
         <script language="javascript" src="programs.js"></script>
 
         <link rel=stylesheet href="stylesheet.css" type="text/css">
         <link rel=stylesheet href="slider.css" type="text/css">
+        <link rel=stylesheet href="stepper.css" type="text/css">
 
     </head>
     <body>
@@ -90,49 +92,41 @@
                         Your browser does not support the canvas element.
                     </canvas>
                 </div>
-                
-                <!-- Transition table under canvas -->
-                <div style="margin-top:8px; margin-bottom:8px;">
-                    <div style="margin-bottom:4px; font-weight: bold; font-size: 0.9em; text-align: center;">
-                        <span>Transition Table (<span id="tableNumberDisplay">v0</span>)</span>
-                    </div>
-                    <div id="transitionTable" style="font-size: 0.85em; overflow-x: auto; max-width: 512px; margin: 0 auto;"></div>
-                    <div style="margin-top:4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <button id="historyPrev" type="button" onclick="historyUndo();" style="padding: 2px 8px;" disabled>&lt; undo</button>
-                        <button id="historyNext" type="button" onclick="historyRedo();" style="padding: 2px 8px;" disabled>redo &gt;</button>
-                    </div>
-                </div>
             </div>
 
             <!-- controls section -->
             <div class="controls-section">
                 <form name="params" action="">
+                
+                    <!-- Transition table -->
+                    <div style="margin-top:8px; margin-bottom:8px;">
+                        <div style="margin-bottom:4px; font-weight: bold; font-size: 0.9em; text-align: center;">
+                            <span>Transition Table (<span id="tableNumberDisplay">v0</span>)</span>
+                        </div>
+                        <div id="transitionTable" style="font-size: 0.85em; overflow-x: auto; max-width: 512px; margin: 0 auto;"></div>
+                        <div style="margin-top:4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <button id="historyPrev" type="button" onclick="historyUndo();" style="padding: 2px 8px;" disabled>&lt; undo</button>
+                            <button id="historyNext" type="button" onclick="historyRedo();" style="padding: 2px 8px;" disabled>redo &gt;</button>
+                        </div>
+                    </div>
 
                     <div class="button-controls" style="margin-top:8px; margin-bottom:8px;">
-                        <!-- Most used controls -->
-                        <div class="control-group">
-                            <button type="button" onclick="randomProg();">Random (Space)</button>
-                            <button type="button" onclick="restartProg();">Restart (Esc)</button>
-                            <button type="button" onclick="resetProgram();" style="background-color: #d32f2f; color: white;">RESET</button>
-                        </div>
-                        
-                        <!-- Mutation controls (frequently used) -->
-                        <div class="control-group">
-                            <strong>Glitch:</strong>
-                            <button type="button" onclick="glitchRandomizeAll();" title="Full randomize">Full (Space)</button>
-                            <button type="button" onclick="glitchMutate(0.1);" title="Light glitch">Light (G)</button>
-                            <button type="button" onclick="glitchMutate(0.5);" title="Heavy glitch">Heavy (Shift+G)</button>
-                        </div>
-                        
-                        <!-- Specific randomization -->
+                        <!-- Randomization controls - first row -->
                         <div class="control-group">
                             <strong>Randomize:</strong>
-                            <button type="button" onclick="glitchRandomizeStates();" title="Randomize states">States (O)</button>
-                            <button type="button" onclick="glitchRandomizeSymbols();" title="Randomize symbols">Symbols (P)</button>
-                            <button type="button" onclick="glitchRandomizeActions();" title="Randomize arrows">Arrows (I)</button>
-                            <button type="button" onclick="glitchRotate();" title="Rotate arrows">Rotate (R)</button>
+                            <button type="button" onclick="glitchRandomizeAll();" title="Full randomize" style="background-color: #2196F3; color: white; font-weight: bold;">Full (Space)</button>
+                            <button type="button" onclick="glitchRandomizeStates();" title="Randomize states">States (S)</button>
+                            <button type="button" onclick="glitchRandomizeSymbols();" title="Randomize symbols">Colors (C)</button>
+                            <button type="button" onclick="glitchRandomizeActions();" title="Randomize arrows">Arrows (A)</button>
+                            <button type="button" onclick="glitchRotate();" title="Rotate arrows">Rotate Arrows (R)</button>
                         </div>
                         
+                        <!-- Mutation controls -->
+                        <div class="control-group">
+                            <strong>Glitch:</strong>
+                            <button type="button" onclick="glitchMutate(0.1);" title="Light mutation">Light (M)</button>
+                            <button type="button" onclick="glitchMutate(0.5);" title="Heavy mutation">Heavy (Shift+M)</button>
+                        </div>
 
                         <!-- Drawing controls -->
                         <div class="control-group">
@@ -141,26 +135,22 @@
                             <button type="button" onclick="setCursorColor(9);" title="Random color">? (9)</button>
                         </div>
                         
-                        <!-- Sliders for speed and size -->
-                        <div class="control-group" id="speedSizeSliders" style="flex-direction: column; align-items: stretch; gap: 8px;">
-                            <!-- Speed and size sliders will be inserted here -->
+                        <!-- Steppers for speed and size -->
+                        <div class="control-group" id="speedSizeSliders" style="gap: 8px;">
+                            <!-- Speed and size steppers will be inserted here -->
                         </div>
                         
 
                         <!-- Settings -->
-                        <div class="control-group">
-                            <strong>States:</strong>
-                            <button type="button" onclick="adjustStates(-1);" style="padding: 2px 8px;">-</button>
-                            <span id="statesDisplay" style="display: inline-block; min-width: 30px; text-align: center; font-weight: bold;">4</span>
-                            <button type="button" onclick="adjustStates(1);" style="padding: 2px 8px;">+</button>
-                            <strong style="margin-left: 10px;">Symbols:</strong>
-                            <button type="button" onclick="adjustSymbols(-1);" style="padding: 2px 8px;">-</button>
-                            <span id="symbolsDisplay" style="display: inline-block; min-width: 30px; text-align: center; font-weight: bold;">3</span>
-                            <button type="button" onclick="adjustSymbols(1);" style="padding: 2px 8px;">+</button>
+                        <div class="control-group" id="steppersContainer" style="gap: 8px;">
+                            <!-- Steppers will be inserted here by JavaScript -->
                         </div>
                         
+                        <!-- Bottom controls -->
                         <div class="control-group">
                             <button type="button" id="autoRestartBtn" onclick="toggleAutoRestart();" class="toggle-button active" title="Toggle auto-restart">Auto-restart: ON</button>
+                            <button type="button" onclick="restartProg();">Restart (Esc)</button>
+                            <button type="button" onclick="resetProgram();" style="background-color: #d32f2f; color: white;">RESET</button>
                         </div>
                         
                         <!-- Share -->
@@ -175,24 +165,20 @@
                     Turing machine formulation manipulates symbols on a one-dimensional
                     tape. Turing Drawings uses machines that operate on a finite 2D grid,
                     where each grid cell can contain one symbol which corresponds to a
-                    color value. This 2D grid is represented in the canvas shown at the left,
-                    which is dynamically updated as the Turing machine iterates.
+                    color value. This 2D grid is represented in the canvas, which is
+                    dynamically updated as the Turing machine iterates.
                     <br><br>
-                    You can generate new drawings by pressing the "Random" button above. If
-                    you find a drawing you like, and would like to share it online, you can
-                    do so by copying the custom URL shown in the text area below.
-                    Draw directly on the canvas by clicking and dragging with your mouse.
+                    <strong>Interactive Features:</strong> Click or drag on the canvas to paint
+                    directly onto the grid. Modify the transition table by clicking on individual
+                    cells to cycle through states, symbols, and movement directions. Use the
+                    "Glitch" and "Randomize" buttons to introduce controlled mutations, or press
+                    "Random" to generate entirely new machines. The transition table shows the
+                    current active cell as the machine runs, and includes undo/redo history
+                    to explore different variations.
                     <br><br>
-                    <strong>Keyboard Shortcuts:</strong><br>
-                    <strong>Esc</strong>: Restart<br>
-                    <strong>+/-</strong>: Speed up/down (Speed: <span id="speedInfo">1000</span> itr/update)<br>
-                    <strong>0-8</strong>: Cursor color (<span id="cursorColor">Black</span> #<span id="cursorSymbol">1</span>) | <strong>9</strong>: Random mode<br>
-                    <strong>X/Z</strong>: Cursor size (<span id="cursorSize">20</span>)<br>
-                    Click/drag to paint on canvas<br>
-                    <strong>G</strong>: Light glitch (10%) | <strong>Shift+G</strong>: Heavy glitch (50%)<br>
-                    <strong>I</strong>: Randomize arrows | <strong>O</strong>: Randomize states | <strong>P</strong>: Randomize colors<br>
-                    <strong>R</strong>: Rotate arrows | <strong>Space</strong>: Randomize all<br>
-                    <strong>Cmd/Ctrl+Z</strong>: Undo | <strong>Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y</strong>: Redo<br>
+                    Share your creations using the "Share Drawing" button, which copies a URL
+                    containing your exact transition table configuration. Adjust simulation speed,
+                    cursor size, and machine complexity (states/symbols) using the control steppers.
                     </div>
 
                 </form>
@@ -202,7 +188,7 @@
         <div class="copyright">
             Original implementation by Maxime Chevalier-Boisvert  © 2012 (<a href="https://github.com/maximecb/Turing-Drawings">source</a>, <a href="https://maximecb.github.io/Turing-Drawings/">live demo</a>)
             <br>
-            Forked and extended with interactive features by Gabriel Huang © 2025 (<a href="https://github.com/gabrielhuang/Turing-Drawings">source</a>, <a href="https://gabrielhuang.github.io/Turing-Drawings/"></a>live demo</a>)
+            Forked and extended with interactive features by Gabriel Huang © 2025 (<a href="https://github.com/gabrielhuang/Turing-Drawings">source</a>, <a href="https://gabrielhuang.github.io/Turing-Drawings/">live demo</a>)
         </div>
 
     </body>

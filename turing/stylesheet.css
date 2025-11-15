@@ -227,14 +227,12 @@ div.copyright
     }
     
     h1.title {
-        font-size: 20px;
-        margin: 6px 0;
-        padding: 0;
+        display: none;
     }
     
     .main-container {
         flex-direction: column;
-        height: calc(100vh - 32px); /* Account for title */
+        height: 100vh;
         gap: 0;
         padding: 0;
         margin: 0;

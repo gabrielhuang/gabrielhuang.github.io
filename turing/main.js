@@ -107,72 +107,45 @@ function renderColorButtons() {
 }
 
 /**
-Initialize all sliders
+Initialize all steppers
 */
-function initializeSliders() {
-    // Speed and Size sliders
+function initializeSteppers() {
+    // Speed and Size steppers
     var speedSizeContainer = document.getElementById('speedSizeSliders');
     if (speedSizeContainer) {
-        // Speed slider (using speed index 0-6)
-        var speedSlider = createSlider('Simulation speed (-/+)', 'speed', 0, SPEED_LEVELS.length - 1, currentSpeedIndex, 1, function(value) {
-            currentSpeedIndex = parseInt(value);
+        // Speed stepper (using SPEED_LEVELS array as scale)
+        var speedStepper = createStepper('Speed (-/+)', 'speed', 0, SPEED_LEVELS.length - 1, SPEED_LEVELS[currentSpeedIndex], SPEED_LEVELS, function(value) {
+            currentSpeedIndex = SPEED_LEVELS.indexOf(value);
             updateSpeedInfo();
-            updateSpeedSliderDisplay();
         });
-        speedSizeContainer.appendChild(speedSlider);
+        speedSizeContainer.appendChild(speedStepper);
         
-        // Cursor size slider
-        var sizeSlider = createSlider('Cursor size (Z/X)', 'cursorSize', 5, 200, cursor.size, 5, function(value) {
+        // Cursor size stepper
+        var sizeStepper = createStepper('Cursor size (Z/X)', 'cursorSize', 5, 200, cursor.size, 5, function(value) {
             cursor.size = parseInt(value);
             updateCursorInfo();
         });
-        speedSizeContainer.appendChild(sizeSlider);
+        speedSizeContainer.appendChild(sizeStepper);
     }
     
-    // Update speed slider to show actual speed value
-    updateSpeedSliderDisplay();
-    
-    // Update states and symbols display
-    updateStatesSymbolsDisplay();
-}
-
-/**
-Adjust number of states
-*/
-function adjustStates(delta) {
-    var newStates = Math.max(1, Math.min(24, program.numStates + delta));
-    if (newStates !== program.numStates) {
-        randomProg();
-    }
-}
-
-/**
-Adjust number of symbols
-*/
-function adjustSymbols(delta) {
-    var newSymbols = Math.max(2, Math.min(12, program.numSymbols + delta));
-    if (newSymbols !== program.numSymbols) {
-        randomProg();
-    }
-}
-
-/**
-Update states and symbols display
-*/
-function updateStatesSymbolsDisplay() {
-    var statesDisplay = document.getElementById('statesDisplay');
-    var symbolsDisplay = document.getElementById('symbolsDisplay');
-    if (statesDisplay) statesDisplay.textContent = program.numStates;
-    if (symbolsDisplay) symbolsDisplay.textContent = program.numSymbols;
-}
-
-/**
-Update the speed slider display to show the actual speed value instead of index
-*/
-function updateSpeedSliderDisplay() {
-    var valueDisplay = document.getElementById('speedValue');
-    if (valueDisplay) {
-        valueDisplay.textContent = SPEED_LEVELS[currentSpeedIndex];
+    // Settings steppers (States, Symbols)
+    var steppersContainer = document.getElementById('steppersContainer');
+    if (steppersContainer) {
+        // Number of states stepper
+        var statesStepper = createStepper('States', 'numStates', 1, 24, 4, 1, function(value) {
+            if (value !== program.numStates) {
+                randomProg();
+            }
+        });
+        steppersContainer.appendChild(statesStepper);
+        
+        // Number of symbols stepper
+        var symbolsStepper = createStepper('Symbols', 'numSymbols', 2, 12, 3, 1, function(value) {
+            if (value !== program.numSymbols) {
+                randomProg();
+            }
+        });
+        steppersContainer.appendChild(symbolsStepper);
     }
 }
 
@@ -219,11 +192,6 @@ function saveToHistory() {
     
     // Add to end of history (index becomes version number)
     tableHistory.push(historyEntry);
-    
-    // Limit history size (remove from beginning)
-    if (tableHistory.length > MAX_HISTORY) {
-        tableHistory.shift();
-    }
     
     historyCursor = tableHistory.length - 1;
     renderHistory();
@@ -694,11 +662,11 @@ function init()
     // Create an image data array
     canvas.imgData = canvas.ctx.createImageData(canvas.width, canvas.height);
 
-    // Create a default program first (sliders need program to exist)
+    // Create a default program first (steppers need program to exist)
     program = new Program(4, 3, canvas.width, canvas.height);
     
-    // Now initialize sliders (they can safely reference program)
-    initializeSliders();
+    // Now initialize steppers (they can safely reference program)
+    initializeSteppers();
     
     // If a location hash is specified, load it
     if (location.hash !== '')
@@ -711,8 +679,9 @@ function init()
             canvas.height
         );
         
-        // Update the displays to match the loaded program
-        updateStatesSymbolsDisplay();
+        // Update the steppers to match the loaded program
+        updateStepperValue('numStates', program.numStates);
+        updateStepperValue('numSymbols', program.numSymbols);
         
         // Update share URL
         updateShareURL();
@@ -742,8 +711,11 @@ function init()
     // Add mouse move event listener for cursor
     canvas.addEventListener('mousemove', function(e) {
         var rect = canvas.getBoundingClientRect();
-        cursor.x = e.clientX - rect.left;
-        cursor.y = e.clientY - rect.top;
+        // Scale coordinates for actual canvas size vs display size
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+        cursor.x = (e.clientX - rect.left) * scaleX;
+        cursor.y = (e.clientY - rect.top) * scaleY;
         cursor.visible = true;
         updateCursorInfo();
         
@@ -775,6 +747,44 @@ function init()
     // Also stop drawing if mouse is released anywhere on document
     document.addEventListener('mouseup', function(e) {
         cursor.isDrawing = false;
+    }, false);
+    
+    // Touch support for mobile
+    canvas.addEventListener('touchstart', function(e) {
+        var touch = e.touches[0];
+        var rect = canvas.getBoundingClientRect();
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+        cursor.x = (touch.clientX - rect.left) * scaleX;
+        cursor.y = (touch.clientY - rect.top) * scaleY;
+        cursor.visible = true;
+        cursor.isDrawing = true;
+        writeCursorToMap();
+        updateCursorInfo();
+        e.preventDefault();
+    }, false);
+    
+    canvas.addEventListener('touchmove', function(e) {
+        var touch = e.touches[0];
+        var rect = canvas.getBoundingClientRect();
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+        cursor.x = (touch.clientX - rect.left) * scaleX;
+        cursor.y = (touch.clientY - rect.top) * scaleY;
+        cursor.visible = true;
+        updateCursorInfo();
+        
+        if (cursor.isDrawing) {
+            writeCursorToMap();
+        }
+        e.preventDefault();
+    }, false);
+    
+    canvas.addEventListener('touchend', function(e) {
+        cursor.isDrawing = false;
+        cursor.visible = false;
+        updateCursorInfo();
+        e.preventDefault();
     }, false);
 
     // Add click event listener to write to map
@@ -836,7 +846,7 @@ function init()
         // X to increase size
         if (key === 'x') {
             cursor.size = Math.min(cursor.size + 5, 200);
-            updateSliderValue('cursorSize', cursor.size);
+            updateStepperValue('cursorSize', cursor.size);
             updateCursorInfo();
             showNotification('Cursor size: ' + cursor.size);
             e.preventDefault();
@@ -844,7 +854,7 @@ function init()
         // Z to decrease size
         else if (key === 'z') {
             cursor.size = Math.max(cursor.size - 5, 5);
-            updateSliderValue('cursorSize', cursor.size);
+            updateStepperValue('cursorSize', cursor.size);
             updateCursorInfo();
             showNotification('Cursor size: ' + cursor.size);
             e.preventDefault();
@@ -853,9 +863,8 @@ function init()
         else if (key === '+' || key === '=') {
             if (currentSpeedIndex < SPEED_LEVELS.length - 1) {
                 currentSpeedIndex++;
-                updateSliderValue('speed', currentSpeedIndex);
+                updateStepperValue('speed', SPEED_LEVELS[currentSpeedIndex]);
                 updateSpeedInfo();
-                updateSpeedSliderDisplay();
                 showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
             }
             e.preventDefault();
@@ -864,9 +873,8 @@ function init()
         else if (key === '-' || key === '_') {
             if (currentSpeedIndex > 0) {
                 currentSpeedIndex--;
-                updateSliderValue('speed', currentSpeedIndex);
+                updateStepperValue('speed', SPEED_LEVELS[currentSpeedIndex]);
                 updateSpeedInfo();
-                updateSpeedSliderDisplay();
                 showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
             }
             e.preventDefault();
@@ -889,33 +897,33 @@ function init()
             updateCursorInfo();
             e.preventDefault();
         }
-        // G for glitch mutations
-        else if (key === 'g') {
+        // M for glitch mutations (mutate)
+        else if (key === 'm') {
             if (e.shiftKey) {
-                // Shift+G: Heavy mutation (50%)
+                // Shift+M: Heavy mutation (50%)
                 glitchMutate(0.5);
-                showNotification('Heavy glitch (50%)');
+                showNotification('Heavy mutation (50%)');
             } else {
-                // G: Light mutation (10%)
+                // M: Light mutation (10%)
                 glitchMutate(0.1);
-                showNotification('Light glitch (10%)');
+                showNotification('Light mutation (10%)');
             }
             e.preventDefault();
         }
-        // I for randomize actions (arrows)
-        else if (key === 'i') {
+        // A for randomize actions (arrows)
+        else if (key === 'a') {
             glitchRandomizeActions();
             showNotification('Randomized arrows');
             e.preventDefault();
         }
-        // O for randomize states
-        else if (key === 'o') {
+        // S for randomize states
+        else if (key === 's') {
             glitchRandomizeStates();
             showNotification('Randomized states');
             e.preventDefault();
         }
-        // P for randomize symbols (colors)
-        else if (key === 'p') {
+        // C for randomize symbols (colors)
+        else if (key === 'c') {
             glitchRandomizeSymbols();
             showNotification('Randomized colors');
             e.preventDefault();
@@ -950,11 +958,8 @@ Generate a new random program
 */
 function randomProg()
 {
-    var statesDisplay = document.getElementById('statesDisplay');
-    var symbolsDisplay = document.getElementById('symbolsDisplay');
-    
-    var numStates = statesDisplay ? parseInt(statesDisplay.textContent) : 4;
-    var numSymbols = symbolsDisplay ? parseInt(symbolsDisplay.textContent) : 3;
+    var numStates = getStepperValue('numStates');
+    var numSymbols = getStepperValue('numSymbols');
 
     assert (
         numSymbols <= colorMap.length,
@@ -968,9 +973,6 @@ function randomProg()
 
     // Update the sharing URL
     updateShareURL();
-    
-    // Update displays
-    updateStatesSymbolsDisplay();
     
     // Re-render color buttons (numSymbols may have changed)
     renderColorButtons();
@@ -995,8 +997,9 @@ function resetProgram()
     // Create new program with default settings
     program = new Program(4, 3, canvas.width, canvas.height);
     
-    // Update the displays
-    updateStatesSymbolsDisplay();
+    // Update the steppers
+    updateStepperValue('numStates', 4);
+    updateStepperValue('numSymbols', 3);
     
     // Update share URL
     updateShareURL();
@@ -1060,9 +1063,8 @@ Button control functions - wrappers for keyboard shortcuts
 function increaseSpeed() {
     if (currentSpeedIndex < SPEED_LEVELS.length - 1) {
         currentSpeedIndex++;
-        updateSliderValue('speed', currentSpeedIndex);
+        updateStepperValue('speed', SPEED_LEVELS[currentSpeedIndex]);
         updateSpeedInfo();
-        updateSpeedSliderDisplay();
         showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
     }
 }
@@ -1070,23 +1072,22 @@ function increaseSpeed() {
 function decreaseSpeed() {
     if (currentSpeedIndex > 0) {
         currentSpeedIndex--;
-        updateSliderValue('speed', currentSpeedIndex);
+        updateStepperValue('speed', SPEED_LEVELS[currentSpeedIndex]);
         updateSpeedInfo();
-        updateSpeedSliderDisplay();
         showNotification('Speed: ' + SPEED_LEVELS[currentSpeedIndex] + ' itr/update');
     }
 }
 
 function increaseBrushSize() {
     cursor.size = Math.min(cursor.size + 5, 200);
-    updateSliderValue('cursorSize', cursor.size);
+    updateStepperValue('cursorSize', cursor.size);
     updateCursorInfo();
     showNotification('Cursor size: ' + cursor.size);
 }
 
 function decreaseBrushSize() {
     cursor.size = Math.max(cursor.size - 5, 5);
-    updateSliderValue('cursorSize', cursor.size);
+    updateStepperValue('cursorSize', cursor.size);
     updateCursorInfo();
     showNotification('Cursor size: ' + cursor.size);
 }
