@@ -205,6 +205,10 @@ function historyUndo() {
         historyCursor--;
         restoreFromHistory(historyCursor);
         showNotification('Undo → v' + historyCursor);
+        // Refresh variants if feature is enabled
+        if (typeof generateVariants === 'function' && typeof variantManager !== 'undefined' && variantManager.enabled) {
+            generateVariants();
+        }
     }
 }
 
@@ -216,6 +220,10 @@ function historyRedo() {
         historyCursor++;
         restoreFromHistory(historyCursor);
         showNotification('Redo → v' + historyCursor);
+        // Refresh variants if feature is enabled
+        if (typeof generateVariants === 'function' && typeof variantManager !== 'undefined' && variantManager.enabled) {
+            generateVariants();
+        }
     }
 }
 
@@ -962,6 +970,38 @@ function init()
     
     // Update active cell in transition table
     updateActiveCell();
+    
+    // Listen for hash changes (bookmarks or manual URL edits)
+    window.addEventListener('hashchange', function() {
+        if (location.hash !== '') {
+            console.log('hash changed, loading program from URL');
+            
+            var newProgram = Program.fromString(
+                location.hash.substr(1),
+                canvas.width,
+                canvas.height
+            );
+            
+            // Update program
+            program = newProgram;
+            
+            // Update UI
+            updateStepperValue('numStates', program.numStates);
+            updateStepperValue('numSymbols', program.numSymbols);
+            renderColorButtons();
+            renderTransitionTable();
+            
+            // Save to history
+            saveToHistory();
+            
+            // Refresh variants if enabled
+            if (typeof generateVariants === 'function' && typeof variantManager !== 'undefined' && variantManager.enabled) {
+                generateVariants();
+            }
+            
+            showNotification('Loaded from URL');
+        }
+    }, false);
 }
 window.addEventListener("load", init, false);
 

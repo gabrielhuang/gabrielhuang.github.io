@@ -96,20 +96,22 @@
                         Your browser does not support the canvas element.
                     </canvas>
                 </div>
-                
-                <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
-                <!-- Variant panel (hidden by default) -->
-                <div id="variantPanel">
-                    <div style="text-align: center; margin-bottom: 8px; margin-top: 12px;">
-                        <button type="button" onclick="generateVariants();" style="padding: 6px 12px; font-size: 0.9em;" title="Generate new variants">↻ Refresh Variants (V)</button>
-                    </div>
-                    <div style="text-align: center; font-size: 0.85em; margin-bottom: 4px; color: #aaa;">
-                        Click a variant to apply it
-                    </div>
-                    <div id="variantContainer"></div>
-                </div>
-                <!-- END OPTIONAL: Variant Explorer -->
+            
             </div>
+
+            <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
+            <!-- Variant panel (shown by default) -->
+            <div id="variantPanel" style="display: block;">
+                <div class="control-group" style="margin-bottom: 8px; margin-top: 12px;">
+                    <button type="button" onclick="generateVariants();" title="Generate new variants">↻ Generate Variants (V)</button>
+                    <button type="button" id="hideVariantsBtn" onclick="toggleVariantExplorer();" title="Hide variant explorer">Hide Variants</button>
+                </div>
+                <div style="text-align: center; font-size: 0.85em; margin-bottom: 4px; color: #aaa;">
+                    Click a variant to apply it
+                </div>
+                <div id="variantContainer"></div>
+            </div>
+            <!-- END OPTIONAL: Variant Explorer -->
 
             <!-- controls section -->
             <div class="controls-section">
@@ -170,14 +172,11 @@
                             <button type="button" onclick="resetProgram();" style="background-color: #d32f2f; color: white;">RESET</button>
                         </div>
                         
-                        <!-- Share -->
-                        <div class="control-group">
-                            <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing">Share Drawing</button>
-                        </div>
-                        
+                        <!-- Share and Variants -->
                         <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
                         <div class="control-group">
-                            <button type="button" id="variantExplorerBtn" onclick="toggleVariantExplorer();" class="toggle-button" title="Explore mutation variants">Explore Variants</button>
+                            <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing">Share Drawing</button>
+                            <button type="button" id="variantExplorerBtn" onclick="toggleVariantExplorer();" class="toggle-button" title="Show mutation variants" style="display: none;">Show Variants</button>
                         </div>
                         <!-- END OPTIONAL: Variant Explorer -->
                     </div>

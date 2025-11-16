@@ -52,27 +52,39 @@
     font-weight: bold;
 }
 
-/* Mobile: keep 3x3 grid but make it scrollable */
+/* Mobile: scale down to fit 3x3 grid on screen */
 @media screen and (max-width: 768px) {
     #variantPanel {
         max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        padding: 4px;
+        margin: 0 auto 8px auto;
     }
     
     #variantContainer {
         grid-template-columns: repeat(3, 1fr);
-        min-width: 100%;
+        gap: 4px;
+        justify-items: center;
     }
     
     .variant-thumbnail {
         min-width: 0;
     }
+    
+    .variant-thumbnail canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    .variant-label {
+        font-size: 0.6em;
+        padding: 2px;
+    }
 }
 
-/* Very small screens: 1 column */
-@media screen and (max-width: 480px) {
-    #variantContainer {
-        grid-template-columns: 1fr;
+/* Desktop: position under canvas */
+@media screen and (min-width: 769px) {
+    .canvas-section #variantPanel {
+        margin-top: 8px;
     }
 }

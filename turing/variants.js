@@ -5,7 +5,7 @@
  */
 
 var variantManager = {
-    enabled: false,
+    enabled: true,  // Start enabled by default
     variants: [],
     numVariants: 9,
     thumbnailSize: 128,
@@ -19,18 +19,27 @@ var variantManager = {
  */
 function toggleVariantExplorer() {
     variantManager.enabled = !variantManager.enabled;
-    var button = document.getElementById('variantExplorerBtn');
+    var showButton = document.getElementById('variantExplorerBtn');
+    var hideButton = document.getElementById('hideVariantsBtn');
     var panel = document.getElementById('variantPanel');
     
     if (variantManager.enabled) {
-        button.classList.add('active');
-        button.textContent = 'Hide Variants';
+        if (showButton) {
+            showButton.style.display = 'none';
+        }
+        if (hideButton) {
+            hideButton.style.display = 'inline-block';
+        }
         panel.style.display = 'block';
         generateVariants();
         startVariantAnimation();
     } else {
-        button.classList.remove('active');
-        button.textContent = 'Explore Variants';
+        if (showButton) {
+            showButton.style.display = 'inline-block';
+        }
+        if (hideButton) {
+            hideButton.style.display = 'none';
+        }
         panel.style.display = 'none';
         stopVariantAnimation();
         clearVariants();
@@ -300,3 +309,44 @@ function clearVariants() {
         container.innerHTML = '';
     }
 }
+
+/**
+ * Move variant panel based on screen size
+ * On mobile: inside controls-section
+ * On desktop: inside canvas-section
+ */
+function repositionVariantPanel() {
+    var panel = document.getElementById('variantPanel');
+    var canvasSection = document.querySelector('.canvas-section');
+    var controlsSection = document.querySelector('.controls-section');
+    
+    if (!panel || !canvasSection || !controlsSection) return;
+    
+    var isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // Move to top of controls section (after the form opening tag)
+        var form = controlsSection.querySelector('form');
+        if (form && panel.parentElement !== form) {
+            form.insertBefore(panel, form.firstChild);
+        }
+    } else {
+        // Move to canvas section (after canvas_frame)
+        var canvasFrame = canvasSection.querySelector('.canvas_frame');
+        if (canvasFrame && panel.parentElement !== canvasSection) {
+            canvasFrame.parentNode.insertBefore(panel, canvasFrame.nextSibling);
+        }
+    }
+}
+
+// Reposition on load and window resize
+window.addEventListener('load', function() {
+    repositionVariantPanel();
+    // Generate variants on load if enabled
+    if (variantManager.enabled) {
+        generateVariants();
+        startVariantAnimation();
+    }
+});
+window.addEventListener('resize', repositionVariantPanel);
+
