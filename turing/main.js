@@ -825,6 +825,10 @@ function init()
         if (key === 'escape') {
             restartProg();
             showNotification('Restarted');
+            // Restart variants if feature is enabled
+            if (typeof restartVariants === 'function' && typeof variantManager !== 'undefined' && variantManager.enabled) {
+                restartVariants();
+            }
             e.preventDefault();
             return;
         }
@@ -938,6 +942,14 @@ function init()
         else if (key === ' ') {
             glitchRandomizeAll();
             showNotification('Randomized all');
+            e.preventDefault();
+        }
+        // V for refresh variants
+        else if (key === 'v') {
+            if (typeof generateVariants === 'function' && typeof variantManager !== 'undefined' && variantManager.enabled) {
+                generateVariants();
+                showNotification('Variants refreshed');
+            }
             e.preventDefault();
         }
     }, false);

@@ -1,0 +1,78 @@
+/* Variant Explorer Styles - Optional Feature */
+/* To remove: delete this file and the <link> tag in index.html */
+
+#variantPanel {
+    display: none;
+    margin-top: 8px;
+    padding: 8px;
+    background: #1a1a1a;
+    border: 2px solid #444;
+    border-radius: 4px;
+}
+
+#variantContainer {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.variant-thumbnail {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid #666;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.2s;
+    background: #000;
+}
+
+.variant-thumbnail:hover {
+    border-color: #2196F3;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.variant-thumbnail canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.variant-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px;
+    text-align: center;
+    font-size: 0.75em;
+    font-weight: bold;
+}
+
+/* Mobile: keep 3x3 grid but make it scrollable */
+@media screen and (max-width: 768px) {
+    #variantPanel {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #variantContainer {
+        grid-template-columns: repeat(3, 1fr);
+        min-width: 100%;
+    }
+    
+    .variant-thumbnail {
+        min-width: 0;
+    }
+}
+
+/* Very small screens: 1 column */
+@media screen and (max-width: 480px) {
+    #variantContainer {
+        grid-template-columns: 1fr;
+    }
+}

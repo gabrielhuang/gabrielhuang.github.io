@@ -13,10 +13,14 @@
         <script language="javascript" src="stepper.js"></script>
         <script language="javascript" src="main.js"></script>
         <script language="javascript" src="programs.js"></script>
+        <!-- OPTIONAL: Variant Explorer - DELETE NEXT LINE TO REMOVE -->
+        <script language="javascript" src="variants.js"></script>
 
         <link rel=stylesheet href="stylesheet.css" type="text/css">
         <link rel=stylesheet href="slider.css" type="text/css">
         <link rel=stylesheet href="stepper.css" type="text/css">
+        <!-- OPTIONAL: Variant Explorer - DELETE NEXT LINE TO REMOVE -->
+        <link rel=stylesheet href="variants.css" type="text/css">
 
     </head>
     <body>
@@ -92,6 +96,19 @@
                         Your browser does not support the canvas element.
                     </canvas>
                 </div>
+                
+                <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
+                <!-- Variant panel (hidden by default) -->
+                <div id="variantPanel">
+                    <div style="text-align: center; margin-bottom: 8px; margin-top: 12px;">
+                        <button type="button" onclick="generateVariants();" style="padding: 6px 12px; font-size: 0.9em;" title="Generate new variants">↻ Refresh Variants (V)</button>
+                    </div>
+                    <div style="text-align: center; font-size: 0.85em; margin-bottom: 4px; color: #aaa;">
+                        Click a variant to apply it
+                    </div>
+                    <div id="variantContainer"></div>
+                </div>
+                <!-- END OPTIONAL: Variant Explorer -->
             </div>
 
             <!-- controls section -->
@@ -157,6 +174,12 @@
                         <div class="control-group">
                             <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing">Share Drawing</button>
                         </div>
+                        
+                        <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
+                        <div class="control-group">
+                            <button type="button" id="variantExplorerBtn" onclick="toggleVariantExplorer();" class="toggle-button" title="Explore mutation variants">Explore Variants</button>
+                        </div>
+                        <!-- END OPTIONAL: Variant Explorer -->
                     </div>
 
                     <div class="description-text" style="margin-top:16px; margin-bottom:16px; text-align: justify; font-size: 0.9em;">

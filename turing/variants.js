@@ -7,9 +7,11 @@
 var variantManager = {
     enabled: false,
     variants: [],
-    numVariants: 6,
+    numVariants: 9,
     thumbnailSize: 128,
-    simulationSteps: 500
+    simulationSteps: 500,
+    animationFrameId: null,
+    updateInterval: 40  // Match main canvas update time
 };
 
 /**
@@ -25,11 +27,69 @@ function toggleVariantExplorer() {
         button.textContent = 'Hide Variants';
         panel.style.display = 'block';
         generateVariants();
+        startVariantAnimation();
     } else {
         button.classList.remove('active');
         button.textContent = 'Explore Variants';
         panel.style.display = 'none';
+        stopVariantAnimation();
         clearVariants();
+    }
+}
+
+/**
+ * Render a single variant to its canvas
+ */
+function renderVariant(variant) {
+    var data = variant.imgData.data;
+    var map = variant.program.map;
+    for (var i = 0; i < map.length; i++) {
+        var sy = map[i];
+        var r = colorMap[3 * sy + 0];
+        var g = colorMap[3 * sy + 1];
+        var b = colorMap[3 * sy + 2];
+        data[4 * i + 0] = r;
+        data[4 * i + 1] = g;
+        data[4 * i + 2] = b;
+        data[4 * i + 3] = 255;
+    }
+    variant.ctx.putImageData(variant.imgData, 0, 0);
+}
+
+/**
+ * Start animation loop for all variants
+ */
+function startVariantAnimation() {
+    if (variantManager.animationFrameId !== null) return;
+    
+    var lastTime = Date.now();
+    
+    function animate() {
+        var now = Date.now();
+        if (now - lastTime >= variantManager.updateInterval) {
+            lastTime = now;
+            
+            // Update and render each variant
+            for (var i = 0; i < variantManager.variants.length; i++) {
+                var variant = variantManager.variants[i];
+                variant.program.update(10000);
+                renderVariant(variant);
+            }
+        }
+        
+        variantManager.animationFrameId = requestAnimationFrame(animate);
+    }
+    
+    animate();
+}
+
+/**
+ * Stop animation loop for variants
+ */
+function stopVariantAnimation() {
+    if (variantManager.animationFrameId !== null) {
+        cancelAnimationFrame(variantManager.animationFrameId);
+        variantManager.animationFrameId = null;
     }
 }
 
@@ -40,28 +100,45 @@ function generateVariants() {
     variantManager.variants = [];
     
     // Create variants with different mutations
+    // 3 Light mutations
     variantManager.variants.push(
-        createVariant('Full Random', function(prog) {
-            for (var i = 0; i < prog.table.length; i += 3) {
-                prog.table[i + 0] = randomInt(0, prog.numStates - 1);
-                prog.table[i + 1] = randomInt(0, prog.numSymbols - 1);
-                prog.table[i + 2] = randomInt(0, 3);
-            }
+        createVariant('Light Mutation 1', function(prog) {
+            mutateProgram(prog, 0.1);
         })
     );
     
     variantManager.variants.push(
-        createVariant('Heavy Mutation', function(prog) {
+        createVariant('Light Mutation 2', function(prog) {
+            mutateProgram(prog, 0.1);
+        })
+    );
+    
+    variantManager.variants.push(
+        createVariant('Light Mutation 3', function(prog) {
+            mutateProgram(prog, 0.1);
+        })
+    );
+    
+    // 3 Heavy mutations
+    variantManager.variants.push(
+        createVariant('Heavy Mutation 1', function(prog) {
             mutateProgram(prog, 0.5);
         })
     );
     
     variantManager.variants.push(
-        createVariant('Light Mutation', function(prog) {
-            mutateProgram(prog, 0.1);
+        createVariant('Heavy Mutation 2', function(prog) {
+            mutateProgram(prog, 0.5);
         })
     );
     
+    variantManager.variants.push(
+        createVariant('Heavy Mutation 3', function(prog) {
+            mutateProgram(prog, 0.5);
+        })
+    );
+    
+    // 3 Specific mutations
     variantManager.variants.push(
         createVariant('Random States', function(prog) {
             for (var i = 0; i < prog.table.length; i += 3) {
@@ -96,6 +173,18 @@ function generateVariants() {
 }
 
 /**
+ * Restart all variant simulations from their initial state
+ */
+function restartVariants() {
+    if (!variantManager.enabled || variantManager.variants.length === 0) return;
+    
+    // Reset each variant's program to initial state
+    for (var i = 0; i < variantManager.variants.length; i++) {
+        variantManager.variants[i].program.reset();
+    }
+}
+
+/**
  * Create a single variant
  */
 function createVariant(label, mutationFn) {
@@ -114,38 +203,26 @@ function createVariant(label, mutationFn) {
     // Store the mutated table
     var mutatedTable = tempProgram.table.slice();
     
-    // Reset and simulate
+    // Reset and run initial simulation
     tempProgram.reset();
     for (var i = 0; i < variantManager.simulationSteps; i++) {
         tempProgram.update(1);
     }
     
-    // Create canvas and render
+    // Create canvas
     var canvas = document.createElement('canvas');
     canvas.width = variantManager.thumbnailSize;
     canvas.height = variantManager.thumbnailSize;
     var ctx = canvas.getContext('2d');
     var imgData = ctx.createImageData(canvas.width, canvas.height);
     
-    // Render program to canvas
-    var data = imgData.data;
-    var map = tempProgram.map;
-    for (var i = 0; i < map.length; i++) {
-        var sy = map[i];
-        var r = colorMap[3 * sy + 0];
-        var g = colorMap[3 * sy + 1];
-        var b = colorMap[3 * sy + 2];
-        data[4 * i + 0] = r;
-        data[4 * i + 1] = g;
-        data[4 * i + 2] = b;
-        data[4 * i + 3] = 255;
-    }
-    ctx.putImageData(imgData, 0, 0);
-    
     return {
         label: label,
         table: mutatedTable,
-        canvas: canvas
+        canvas: canvas,
+        ctx: ctx,
+        imgData: imgData,
+        program: tempProgram  // Keep the program for continuous updates
     };
 }
 
