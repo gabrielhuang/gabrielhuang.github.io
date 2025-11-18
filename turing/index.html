@@ -15,12 +15,23 @@
         <script language="javascript" src="programs.js"></script>
         <!-- OPTIONAL: Variant Explorer - DELETE NEXT LINE TO REMOVE -->
         <script language="javascript" src="variants.js"></script>
+        <!-- OPTIONAL: Auto Paint - DELETE NEXT LINE TO REMOVE -->
+        <script language="javascript" src="autopaint.js"></script>
 
         <link rel=stylesheet href="stylesheet.css" type="text/css">
         <link rel=stylesheet href="slider.css" type="text/css">
         <link rel=stylesheet href="stepper.css" type="text/css">
         <!-- OPTIONAL: Variant Explorer - DELETE NEXT LINE TO REMOVE -->
         <link rel=stylesheet href="variants.css" type="text/css">
+        
+        <style>
+        @font-face {
+            font-family: 'Bonheur Royale';
+            src: url('BonheurRoyale-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        </style>
 
     </head>
     <body>
@@ -84,8 +95,8 @@
         <img src="forkme.png" alt="Fork me on GitHub">
         </a> -->
 
-        <h1 class="title">
-        <a href="#">Interactive Turing</a>
+        <h1 class="title" id="pageTitle" style="font-family: 'Bonheur Royale', cursive; font-size: 48px; margin-top: 8px; margin-bottom: 0px;">
+        <a href="#" style="font-family: 'Bonheur Royale', cursive; color: white;">Turing Glitcher</a>
         </h1>
 
         <div class="main-container">
@@ -96,114 +107,144 @@
                         Your browser does not support the canvas element.
                     </canvas>
                 </div>
-            
             </div>
 
-            <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
-            <!-- Variant panel (shown by default) -->
-            <div id="variantPanel" style="display: block;">
-                <div class="control-group" style="margin-bottom: 8px; margin-top: 12px;">
-                    <button type="button" onclick="generateVariants();" title="Generate new variants">↻ Generate Variants (V)</button>
-                    <button type="button" id="hideVariantsBtn" onclick="toggleVariantExplorer();" title="Hide variant explorer">Hide Variants</button>
-                </div>
-                <div style="text-align: center; font-size: 0.85em; margin-bottom: 4px; color: #aaa;">
-                    Click a variant to apply it
-                </div>
-                <div id="variantContainer"></div>
-            </div>
-            <!-- END OPTIONAL: Variant Explorer -->
+            <!-- variants section (separate for mobile scroll) -->
+            <div class="variants-section" id="variantsSection">
+                <div class="section-container">
+                    <h2 class="mobile-title" style="font-family: 'Bonheur Royale', cursive; font-size: 36px; margin: 0 0 12px 0; text-align: center; display: none;">
+                        <a href="#" style="font-family: 'Bonheur Royale', cursive; color: white; text-decoration: none;">Turing Glitcher</a>
+                    </h2>
+                    
+                    <div class="control-group" style="margin-bottom: 8px; justify-content: center;">
+                        <strong>Paintbrush:</strong>
+                        <span id="colorButtonsContainer"></span>
+                        <button type="button" id="randomColorBtn" onclick="setCursorColor(9);" title="Random color" style="padding: 0; width: 28px; height: 28px; min-height: 28px; position: relative; overflow: hidden; border: 2px solid white;">
+                            <canvas id="randomColorCanvas" width="28" height="28" style="display: block; width: 28px; height: 28px;"></canvas>
+                            <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-weight: bold; font-size: 11px; z-index: 1;">9</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Speed control -->
+                    <div class="control-group" id="speedControl" style="gap: 8px; margin-bottom: 8px; justify-content: center;">
+                        <!-- Speed stepper will be inserted here -->
+                    </div>
+                    
+                    <div class="control-group" style="margin-bottom: 8px; justify-content: center;">
+                        <button id="variantHistoryPrev" type="button" onclick="historyUndo();" style="padding: 4px 8px; font-size: 0.85em; min-height: auto; line-height: 1.3;" disabled>← Undo<br><span id="variantHistoryPrevVersion" style="font-size: 0.9em; color: #999;"></span></button>
+                        <button type="button" onclick="glitchRandomizeAll();" title="Instantly randomize the entire transition table" style="background-color: #2196F3; color: white; font-weight: bold; line-height: 1.2;">Randomize<br>& Apply</button>
+                        <button type="button" onclick="generateVariants();" title="Generate new mutants">Refresh Mutants</button>
+                    </div>
 
-            <!-- controls section -->
+                    <p id="mutationNotice" style="margin: 0 0 2px 0; font-size: 0.85em; text-align: center; color: #aaa;">Click a mutation to apply it</p>
+                    
+                    <div id="variantContainer"></div>
+                    
+                    <div style="text-align: center; font-size: 0.85em; margin: 8px 0 4px 0; color: #aaa;">
+                        Generate specific mutations:
+                    </div>
+                    <div class="control-group" style="margin-bottom: 8px; flex-wrap: wrap; justify-content: center; max-width: 512px; margin-left: auto; margin-right: auto;">
+                        <button type="button" onclick="generateMutationVariants('fullRandom');" title="Generate 9 full random mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">Full Random (F)</button>
+                        <button type="button" onclick="generateMutationVariants('states');" title="Generate 9 state mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">States (S)</button>
+                        <button type="button" onclick="generateMutationVariants('colors');" title="Generate 9 color mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">Colors (C)</button>
+                        <button type="button" onclick="generateMutationVariants('arrows');" title="Generate 9 arrow mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">Arrows (A)</button>
+                        <button type="button" onclick="generateMutationVariants('rotate');" title="Generate 9 rotation mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">Rotate (R)</button>
+                        <button type="button" onclick="generateMutationVariants('glitchLight');" title="Generate 9 light mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">Light (M)</button>
+                        <button type="button" onclick="generateMutationVariants('glitchHeavy');" title="Generate 9 heavy mutants" style="padding: 4px 8px; font-size: 0.8em; min-height: auto;">Heavy (⇧M)</button>
+                    </div>
+                </div>
+            </div>            <!-- controls section -->
             <div class="controls-section">
                 <form name="params" action="">
-                
-                    <!-- Transition table -->
-                    <div style="margin-top:8px; margin-bottom:8px;">
-                        <div style="margin-bottom:4px; font-weight: bold; font-size: 0.9em; text-align: center;">
-                            <span>Transition Table (<span id="tableNumberDisplay">v0</span>)</span>
+
+                    <!-- SECTION 2: ADVANCED CONTROLS -->
+                    <div class="section-container">
+                        <div class="section-header">
+                            <h2 style="margin: 0 0 6px 0; font-size: 1em;">Advanced</h2>
                         </div>
-                        <div id="transitionTable" style="font-size: 0.85em; overflow-x: auto; max-width: 512px; margin: 0 auto;"></div>
-                        <div style="margin-top:4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                            <button id="historyPrev" type="button" onclick="historyUndo();" style="padding: 2px 8px;" disabled>&lt; undo</button>
-                            <button id="historyNext" type="button" onclick="historyRedo();" style="padding: 2px 8px;" disabled>redo &gt;</button>
+                        
+                        <!-- Paint on Canvas controls -->
+                        <div class="button-controls" style="margin: 0 0 12px 0;">
+                            <div class="control-group" id="speedSizeSliders" style="gap: 8px;">
+                                <!-- Cursor size stepper will be inserted here -->
+                            </div>
+                            
+                            <!-- OPTIONAL: Auto Paint -->
+                            <div class="control-group">
+                                <button type="button" id="autoPaintBtn" onclick="toggleAutoPaint();" class="toggle-button" title="Cycle: OFF → 10% → 100%">Auto-paint: OFF</button>
+                                <select id="autoPaintMode" onchange="setAutoPaintMode(this.value);" title="Select auto-paint mode" style="padding: 4px; font-size: 0.9em;">
+                                    <option value="momentum">Momentum</option>
+                                    <option value="teleport">Teleport</option>
+                                    <option value="circle">Circle</option>
+                                    <option value="noise">Smooth Noise</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="button-controls" style="margin: 0;">
+                            <!-- Instant mutation -->
+                            <div class="control-group">
+                                <strong>Instant Mutation:</strong>
+                                <button type="button" onclick="glitchRandomizeAll();" title="Instantly randomize the entire transition table" style="background-color: #2196F3; color: white; font-weight: bold;">Full Random (Space)</button>
+                            </div>
+
+                            <!-- Machine settings -->
+                            <div class="control-group" id="steppersContainer" style="gap: 8px;">
+                                <!-- States/Symbols steppers will be inserted here -->
+                            </div>
+                            
+                            <!-- Control buttons -->
+                            <div class="control-group">
+                                <button type="button" id="autoRestartBtn" onclick="toggleAutoRestart();" class="toggle-button active" title="Toggle auto-restart">Auto-restart: ON</button>
+                                <button type="button" onclick="restartProg();">Restart (Esc)</button>
+                                <button type="button" onclick="resetProgram();" style="background-color: #d32f2f; color: white;">RESET</button>
+                            </div>
+                            
+                            <!-- Share -->
+                            <div class="control-group">
+                                <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing">Share Drawing</button>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="button-controls" style="margin-top:8px; margin-bottom:8px;">
-                        <!-- Randomization controls - first row -->
-                        <div class="control-group">
-                            <strong>Randomize:</strong>
-                            <button type="button" onclick="glitchRandomizeAll();" title="Full randomize" style="background-color: #2196F3; color: white; font-weight: bold;">Full (Space)</button>
-                            <button type="button" onclick="glitchRandomizeStates();" title="Randomize states">States (S)</button>
-                            <button type="button" onclick="glitchRandomizeSymbols();" title="Randomize symbols">Colors (C)</button>
-                            <button type="button" onclick="glitchRandomizeActions();" title="Randomize arrows">Arrows (A)</button>
-                            <button type="button" onclick="glitchRotate();" title="Rotate arrows">Rotate Arrows (R)</button>
-                        </div>
-                        
-                        <!-- Mutation controls -->
-                        <div class="control-group">
-                            <strong>Glitch:</strong>
-                            <button type="button" onclick="glitchMutate(0.1);" title="Light mutation">Light (M)</button>
-                            <button type="button" onclick="glitchMutate(0.5);" title="Heavy mutation">Heavy (Shift+M)</button>
-                        </div>
-
-                        <!-- Drawing controls -->
-                        <div class="control-group">
-                            <strong>Cursor color:</strong>
-                            <span id="colorButtonsContainer"></span>
-                            <button type="button" onclick="setCursorColor(9);" title="Random color">? (9)</button>
-                        </div>
-                        
-                        <!-- Steppers for speed and size -->
-                        <div class="control-group" id="speedSizeSliders" style="gap: 8px;">
-                            <!-- Speed and size steppers will be inserted here -->
-                        </div>
-                        
-
-                        <!-- Settings -->
-                        <div class="control-group" id="steppersContainer" style="gap: 8px;">
-                            <!-- Steppers will be inserted here by JavaScript -->
-                        </div>
-                        
-                        <!-- Bottom controls -->
-                        <div class="control-group">
-                            <button type="button" id="autoRestartBtn" onclick="toggleAutoRestart();" class="toggle-button active" title="Toggle auto-restart">Auto-restart: ON</button>
-                            <button type="button" onclick="restartProg();">Restart (Esc)</button>
-                            <button type="button" onclick="resetProgram();" style="background-color: #d32f2f; color: white;">RESET</button>
-                        </div>
-                        
-                        <!-- Share and Variants -->
-                        <!-- OPTIONAL: Variant Explorer - DELETE FROM HERE TO 'END OPTIONAL' TO REMOVE -->
-                        <div class="control-group">
-                            <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing">Share Drawing</button>
-                            <button type="button" id="variantExplorerBtn" onclick="toggleVariantExplorer();" class="toggle-button" title="Show mutation variants" style="display: none;">Show Variants</button>
-                        </div>
-                        <!-- END OPTIONAL: Variant Explorer -->
-                    </div>
-
-                    <div class="description-text" style="margin-top:16px; margin-bottom:16px; text-align: justify; font-size: 0.9em;">
-                    Turing Drawings uses randomly generated Turing machines to produce
-                    drawings on a canvas, as a form of generative art. The typical
-                    Turing machine formulation manipulates symbols on a one-dimensional
-                    tape. Turing Drawings uses machines that operate on a finite 2D grid,
-                    where each grid cell can contain one symbol which corresponds to a
-                    color value. This 2D grid is represented in the canvas, which is
-                    dynamically updated as the Turing machine iterates.
-                    <br><br>
-                    <strong>Interactive Features:</strong> Click or drag on the canvas to paint
-                    directly onto the grid. Modify the transition table by clicking on individual
-                    cells to cycle through states, symbols, and movement directions. Use the
-                    "Glitch" and "Randomize" buttons to introduce controlled mutations, or press
-                    "Random" to generate entirely new machines. The transition table shows the
-                    current active cell as the machine runs, and includes undo/redo history
-                    to explore different variations.
-                    <br><br>
-                    Share your creations using the "Share Drawing" button, which copies a URL
-                    containing your exact transition table configuration. Adjust simulation speed,
-                    cursor size, and machine complexity (states/symbols) using the control steppers.
-                    </div>
-
+                    
                 </form>
+            </div>
+            
+            <!-- Transition Table Section -->
+            <div class="transition-table-section" id="transitionTableSection">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2 style="margin: 0 0 6px 0; font-size: 1em;">Transition Table (<span id="tableNumberDisplay">v0</span>)</h2>
+                    </div>
+                    <div id="transitionTable" style="font-size: 0.85em; overflow-x: auto; max-width: 512px; margin: 0 auto;"></div>
+                    <div style="margin-top:8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <button id="historyPrev" type="button" onclick="historyUndo();" style="padding: 2px 8px;" disabled>&lt; undo</button>
+                        <button id="historyNext" type="button" onclick="historyRedo();" style="padding: 2px 8px;" disabled>redo &gt;</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Description text spanning both columns -->
+            <div class="description-text" style="margin-top:16px; margin-bottom:16px; padding: 12px; text-align: justify; font-size: 0.9em;">
+                Turing Drawings uses randomly generated Turing machines to produce
+                drawings on a canvas, as a form of generative art. The typical
+                Turing machine formulation manipulates symbols on a one-dimensional
+                tape. Turing Drawings uses machines that operate on a finite 2D grid,
+                where each grid cell can contain one symbol which corresponds to a
+                color value. This 2D grid is represented in the canvas, which is
+                dynamically updated as the Turing machine iterates.
+                <br><br>
+                <strong>Interactive Features:</strong> Click or drag on the canvas to paint
+                directly onto the grid. Modify the transition table by clicking on individual
+                cells to cycle through states, symbols, and movement directions. Use the
+                "Glitch" and "Randomize" buttons to introduce controlled mutations, or press
+                "Random" to generate entirely new machines. The transition table shows the
+                current active cell as the machine runs, and includes undo/redo history
+                to explore different variations.
+                <br><br>
+                Share your creations using the "Share Drawing" button, which copies a URL
+                containing your exact transition table configuration. Adjust simulation speed,
+                cursor size, and machine complexity (states/symbols) using the control steppers.
             </div>
         </div>
 
@@ -212,6 +253,57 @@
             <br>
             Forked and extended with interactive features by Gabriel Huang © 2025 (<a href="https://github.com/gabrielhuang/Turing-Drawings">source</a>, <a href="https://gabrielhuang.github.io/Turing-Drawings/">live demo</a>)
         </div>
+
+        <script>
+        // Reorder sections based on screen size
+        function reorderSections() {
+            const canvasSection = document.querySelector('.canvas-section');
+            const variantsSection = document.getElementById('variantsSection');
+            const controlsSection = document.querySelector('.controls-section');
+            const transitionTableSection = document.getElementById('transitionTableSection');
+            const mainContainer = document.querySelector('.main-container');
+            const isDesktop = window.innerWidth > 768;
+            
+            if (isDesktop) {
+                // On desktop: 
+                // - variants section is in main container (second column)
+                // - transition table goes under canvas section
+                if (variantsSection && mainContainer && controlsSection) {
+                    // Ensure variants is in main container, before controls
+                    if (variantsSection.parentElement !== mainContainer) {
+                        mainContainer.insertBefore(variantsSection, controlsSection);
+                    }
+                }
+                if (transitionTableSection && canvasSection) {
+                    // Move transition table into canvas section (below canvas)
+                    if (transitionTableSection.parentElement !== canvasSection) {
+                        canvasSection.appendChild(transitionTableSection);
+                    }
+                }
+            } else {
+                // On mobile:
+                // - variants section stays in main container (before controls)
+                // - transition table goes after controls in main container
+                // - DO NOT move variants into canvas section (it's fixed!)
+                if (variantsSection && mainContainer && controlsSection) {
+                    // Ensure variants is in main container, before controls
+                    if (variantsSection.nextElementSibling !== controlsSection) {
+                        mainContainer.insertBefore(variantsSection, controlsSection);
+                    }
+                }
+                if (transitionTableSection && mainContainer && controlsSection) {
+                    // Move transition table after controls section
+                    if (transitionTableSection.parentElement !== mainContainer) {
+                        controlsSection.parentNode.insertBefore(transitionTableSection, controlsSection.nextSibling);
+                    }
+                }
+            }
+        }
+        
+        // Run on load and resize
+        window.addEventListener('load', reorderSections);
+        window.addEventListener('resize', reorderSections);
+        </script>
 
     </body>
 </html>

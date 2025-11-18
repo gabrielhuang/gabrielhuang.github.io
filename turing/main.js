@@ -46,7 +46,7 @@ Cursor state
 var cursor = {
     x: 0,
     y: 0,
-    size: 100,
+    size: 30,
     colorIndex: 1, // Start with black (index 1)
     visible: false,
     isDrawing: false
@@ -59,6 +59,7 @@ var tableHistory = [];
 var MAX_HISTORY = 20;
 var historyCursor = -1; // Points to current position in history (index in array)
 var autoRestart = true; // Auto-restart on table changes
+var isUpdatingHash = false; // Flag to prevent double-saving when we update the hash
 
 /**
 Get color name for display
@@ -83,6 +84,9 @@ function updateCursorInfo() {
     if (cursorColorElem) cursorColorElem.textContent = getColorName(cursor.colorIndex);
     if (cursorSymbolElem) cursorSymbolElem.textContent = cursor.colorIndex === 9 ? 'Random' : cursor.colorIndex;
     if (cursorSizeDisplay) cursorSizeDisplay.textContent = cursor.size;
+    
+    // Update button active states
+    renderColorButtons();
 }
 
 /**
@@ -97,38 +101,78 @@ function renderColorButtons() {
     
     for (var i = 0; i < numSymbols; i++) {
         var color = getSymbolColor(i);
+        var isActive = (cursor.colorIndex === i);
+        var borderStyle = isActive ? 'border: 3px solid #ffeb3b; box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);' : 'border: 2px solid white;';
         html += '<button type="button" onclick="setCursorColor(' + i + ');" title="Color ' + i + '" ';
-        html += 'style="padding: 0; width: 28px; height: 28px; min-height: 28px; border: 2px solid white; background: ' + color + ';">';
+        html += 'style="padding: 0; width: 28px; height: 28px; min-height: 28px; ' + borderStyle + ' background: ' + color + ';">';
         html += '<span style="color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-weight: bold; font-size: 11px;">' + i + '</span>';
         html += '</button>';
     }
     
     container.innerHTML = html;
+    
+    // Validate cursor color whenever color buttons are re-rendered
+    // (This happens whenever program changes, ensuring cursor stays in valid range)
+    if (cursor.colorIndex !== 9 && cursor.colorIndex >= numSymbols) {
+        cursor.colorIndex = Math.max(0, numSymbols - 1);
+        updateCursorInfo();
+    }
+    
+    // Also update the random color button
+    renderRandomColorButton();
+}
+
+/**
+Render the random color button with multicolor grid pattern
+*/
+function renderRandomColorButton() {
+    var canvas = document.getElementById('randomColorCanvas');
+    var btn = document.getElementById('randomColorBtn');
+    if (!canvas || !btn) return;
+    
+    var ctx = canvas.getContext('2d');
+    var numColors = Math.min(8, colorMap.length / 3);
+    var cellSize = 7; // 28 / 4 = 7
+    
+    // Draw 4x4 grid of colors
+    for (var i = 0; i < 4; i++) {
+        for (var j = 0; j < 4; j++) {
+            var colorIdx = ((i + j) % numColors);
+            var r = colorMap[3 * colorIdx + 0];
+            var g = colorMap[3 * colorIdx + 1];
+            var b = colorMap[3 * colorIdx + 2];
+            
+            ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        }
+    }
+    
+    // Update border to show if active
+    var isActive = (cursor.colorIndex === 9);
+    if (isActive) {
+        btn.style.border = '3px solid #ffeb3b';
+        btn.style.boxShadow = '0 0 8px rgba(255, 235, 59, 0.6)';
+    } else {
+        btn.style.border = '2px solid white';
+        btn.style.boxShadow = 'none';
+    }
 }
 
 /**
 Initialize all steppers
 */
 function initializeSteppers() {
-    // Speed and Size steppers
+    // Cursor size stepper (in Drawing Tools section)
     var speedSizeContainer = document.getElementById('speedSizeSliders');
     if (speedSizeContainer) {
-        // Speed stepper (using SPEED_LEVELS array as scale)
-        var speedStepper = createStepper('Speed (-/+)', 'speed', 0, SPEED_LEVELS.length - 1, SPEED_LEVELS[currentSpeedIndex], SPEED_LEVELS, function(value) {
-            currentSpeedIndex = SPEED_LEVELS.indexOf(value);
-            updateSpeedInfo();
-        });
-        speedSizeContainer.appendChild(speedStepper);
-        
-        // Cursor size stepper
-        var sizeStepper = createStepper('Cursor size (Z/X)', 'cursorSize', 5, 200, cursor.size, 5, function(value) {
+        var sizeStepper = createStepper('Cursor size (Z/X)', 'cursorSize', 10, 200, 30, 10, function(value) {
             cursor.size = parseInt(value);
             updateCursorInfo();
         });
         speedSizeContainer.appendChild(sizeStepper);
     }
     
-    // Settings steppers (States, Symbols)
+    // States and Symbols steppers (in Advanced section)
     var steppersContainer = document.getElementById('steppersContainer');
     if (steppersContainer) {
         // Number of states stepper
@@ -146,6 +190,16 @@ function initializeSteppers() {
             }
         });
         steppersContainer.appendChild(symbolsStepper);
+    }
+    
+    // Speed stepper (in Advanced section)
+    var speedControl = document.getElementById('speedControl');
+    if (speedControl) {
+        var speedStepper = createStepper('Speed (-/+)', 'speed', 0, SPEED_LEVELS.length - 1, SPEED_LEVELS[currentSpeedIndex], SPEED_LEVELS, function(value) {
+            currentSpeedIndex = SPEED_LEVELS.indexOf(value);
+            updateSpeedInfo();
+        });
+        speedControl.appendChild(speedStepper);
     }
 }
 
@@ -194,6 +248,7 @@ function saveToHistory() {
     tableHistory.push(historyEntry);
     
     historyCursor = tableHistory.length - 1;
+    console.log('saveToHistory: now at v' + historyCursor + ', history length: ' + tableHistory.length);
     renderHistory();
 }
 
@@ -271,6 +326,8 @@ Render history UI (update button states)
 function renderHistory() {
     var prevButton = document.getElementById('historyPrev');
     var nextButton = document.getElementById('historyNext');
+    var variantPrevButton = document.getElementById('variantHistoryPrev');
+    var variantPrevVersion = document.getElementById('variantHistoryPrevVersion');
     
     if (prevButton) {
         prevButton.disabled = historyCursor <= 0;
@@ -278,6 +335,18 @@ function renderHistory() {
     
     if (nextButton) {
         nextButton.disabled = historyCursor >= tableHistory.length - 1;
+    }
+    
+    if (variantPrevButton) {
+        variantPrevButton.disabled = historyCursor <= 0;
+    }
+    
+    if (variantPrevVersion) {
+        if (historyCursor > 0) {
+            variantPrevVersion.textContent = '(v' + (historyCursor - 1) + ')';
+        } else {
+            variantPrevVersion.textContent = '';
+        }
     }
 }
 
@@ -289,8 +358,16 @@ function updateShareURL() {
     var url = location.protocol + '//' + location.host + location.pathname;
     var shareURL = url + '#' + str;
     
+    // Set flag to prevent hashchange from triggering a save
+    isUpdatingHash = true;
+    
     // Update browser URL without reloading
     window.location.hash = str;
+    
+    // Reset flag after a brief delay to allow hashchange event to fire
+    setTimeout(function() {
+        isUpdatingHash = false;
+    }, 10);
 }
 
 /**
@@ -331,7 +408,7 @@ function writeCursorToMap() {
     var endX = Math.floor(cursor.x + halfSize);
     var endY = Math.floor(cursor.y + halfSize);
     
-    // Write to all pixels in the cursor square
+    // Write to all pixels in the cursor square on main canvas
     for (var y = startY; y <= endY; y++) {
         for (var x = startX; x <= endX; x++) {
             // Check bounds
@@ -343,6 +420,43 @@ function writeCursorToMap() {
                     program.map[mapIndex] = Math.floor(Math.random() * program.numSymbols);
                 } else {
                     program.map[mapIndex] = cursor.colorIndex;
+                }
+            }
+        }
+    }
+    
+    // Also write to all variant canvases at the same position
+    if (typeof variantManager !== 'undefined' && variantManager.enabled && variantManager.variants) {
+        for (var i = 0; i < variantManager.variants.length; i++) {
+            var variant = variantManager.variants[i];
+            var prog = variant.program;
+            
+            // Scale coordinates from main canvas to variant canvas size
+            var scaleX = prog.mapWidth / canvas.width;
+            var scaleY = prog.mapHeight / canvas.height;
+            var scaledSize = cursor.size * Math.min(scaleX, scaleY);
+            var scaledHalfSize = scaledSize / 2;
+            var scaledX = cursor.x * scaleX;
+            var scaledY = cursor.y * scaleY;
+            
+            var vStartX = Math.floor(scaledX - scaledHalfSize);
+            var vStartY = Math.floor(scaledY - scaledHalfSize);
+            var vEndX = Math.floor(scaledX + scaledHalfSize);
+            var vEndY = Math.floor(scaledY + scaledHalfSize);
+            
+            // Write to variant map
+            for (var vy = vStartY; vy <= vEndY; vy++) {
+                for (var vx = vStartX; vx <= vEndX; vx++) {
+                    if (vx >= 0 && vx < prog.mapWidth && vy >= 0 && vy < prog.mapHeight) {
+                        var vMapIndex = vy * prog.mapWidth + vx;
+                        
+                        // If random mode (9), pick random color for each pixel
+                        if (cursor.colorIndex === 9) {
+                            prog.map[vMapIndex] = Math.floor(Math.random() * prog.numSymbols);
+                        } else {
+                            prog.map[vMapIndex] = cursor.colorIndex;
+                        }
+                    }
                 }
             }
         }
@@ -389,6 +503,7 @@ function getSymbolColor(symbolIndex) {
 Cycle transition component (state, symbol, or action)
 */
 function cycleTransition(st0, sy0, component) {
+    console.log('cycleTransition called: st=' + st0 + ', sy=' + sy0 + ', component=' + component);
     // Save current state to history BEFORE making the change
     saveToHistory();
     
@@ -412,6 +527,7 @@ function cycleTransition(st0, sy0, component) {
 
 /**
 Glitch: Random mutation (mutate a percentage of transitions)
+Note: This function is now used internally by the variant generator
 */
 function glitchMutate(intensity) {
     saveToHistory();
@@ -444,101 +560,7 @@ function glitchMutate(intensity) {
 }
 
 /**
-Glitch: Randomize all actions
-*/
-function glitchRandomizeActions() {
-    saveToHistory();
-    
-    // Calculate total number of table entries
-    var totalEntries = program.numStates * program.numSymbols;
-    var numToChange = Math.ceil(totalEntries * 0.2);
-    
-    // Randomly select entries to change
-    for (var i = 0; i < numToChange; i++) {
-        var st = randomInt(0, program.numStates - 1);
-        var sy = randomInt(0, program.numSymbols - 1);
-        var idx = (program.numStates * sy + st) * 3;
-        program.table[idx + 2] = randomInt(0, 3);
-    }
-    
-    renderTransitionTable();
-    updateShareURL();
-    checkAutoRestart();
-    console.log('Randomized 20% of actions');
-}
-
-/**
-Glitch: Randomize all states
-*/
-function glitchRandomizeStates() {
-    saveToHistory();
-    
-    // Calculate total number of table entries
-    var totalEntries = program.numStates * program.numSymbols;
-    var numToChange = Math.ceil(totalEntries * 0.2);
-    
-    // Randomly select entries to change
-    for (var i = 0; i < numToChange; i++) {
-        var st = randomInt(0, program.numStates - 1);
-        var sy = randomInt(0, program.numSymbols - 1);
-        var idx = (program.numStates * sy + st) * 3;
-        program.table[idx + 0] = randomInt(0, program.numStates - 1);
-    }
-    
-    renderTransitionTable();
-    updateShareURL();
-    checkAutoRestart();
-    console.log('Randomized 20% of states');
-}
-
-/**
-Glitch: Randomize all symbols (colors)
-*/
-function glitchRandomizeSymbols() {
-    saveToHistory();
-    
-    // Calculate total number of table entries
-    var totalEntries = program.numStates * program.numSymbols;
-    var numToChange = Math.ceil(totalEntries * 0.2);
-    
-    // Randomly select entries to change
-    for (var i = 0; i < numToChange; i++) {
-        var st = randomInt(0, program.numStates - 1);
-        var sy = randomInt(0, program.numSymbols - 1);
-        var idx = (program.numStates * sy + st) * 3;
-        program.table[idx + 1] = randomInt(0, program.numSymbols - 1);
-    }
-    
-    renderTransitionTable();
-    updateShareURL();
-    checkAutoRestart();
-    console.log('Randomized 20% of symbols');
-}
-
-/**
-Glitch: Rotate all actions clockwise
-*/
-function glitchRotate() {
-    saveToHistory();
-    
-    for (var st = 0; st < program.numStates; st++) {
-        for (var sy = 0; sy < program.numSymbols; sy++) {
-            var idx = (program.numStates * sy + st) * 3;
-            var action = program.table[idx + 2];
-            
-            // Rotate clockwise: LEFT->UP->RIGHT->DOWN->LEFT
-            program.table[idx + 2] = (action + 1) % 4;
-        }
-    }
-    
-    renderTransitionTable();
-    updateShareURL();
-    checkAutoRestart();
-    console.log('Rotated all actions clockwise');
-}
-
-/**
-Glitch: Randomize all (states, symbols, and actions)
+Glitch: Randomize all (states, symbols, and actions) - INSTANT mutation, not a filter
 */
 function glitchRandomizeAll() {
     saveToHistory();
@@ -556,7 +578,16 @@ function glitchRandomizeAll() {
     updateShareURL();
     checkAutoRestart();
     console.log('Randomized all table entries');
+    
+    // Regenerate variants after mutation
+    if (typeof generateVariants === 'function' && typeof variantManager !== 'undefined' && variantManager.enabled) {
+        generateVariants();
+    }
 }
+
+/**
+Render the transition table
+*/
 
 /**
 Render the transition table
@@ -857,7 +888,7 @@ function init()
         
         // X to increase size
         if (key === 'x') {
-            cursor.size = Math.min(cursor.size + 5, 200);
+            cursor.size = Math.min(cursor.size + 10, 200);
             updateStepperValue('cursorSize', cursor.size);
             updateCursorInfo();
             showNotification('Cursor size: ' + cursor.size);
@@ -865,7 +896,7 @@ function init()
         }
         // Z to decrease size
         else if (key === 'z') {
-            cursor.size = Math.max(cursor.size - 5, 5);
+            cursor.size = Math.max(cursor.size - 10, 10);
             updateStepperValue('cursorSize', cursor.size);
             updateCursorInfo();
             showNotification('Cursor size: ' + cursor.size);
@@ -912,38 +943,58 @@ function init()
         // M for glitch mutations (mutate)
         else if (key === 'm') {
             if (e.shiftKey) {
-                // Shift+M: Heavy mutation (50%)
-                glitchMutate(0.5);
-                showNotification('Heavy mutation (50%)');
+                // Shift+M: Heavy mutation variants
+                if (typeof generateMutationVariants === 'function') {
+                    generateMutationVariants('glitchHeavy');
+                    showNotification('Generating Heavy mutants');
+                }
             } else {
-                // M: Light mutation (10%)
-                glitchMutate(0.1);
-                showNotification('Light mutation (10%)');
+                // M: Light mutation variants
+                if (typeof generateMutationVariants === 'function') {
+                    generateMutationVariants('glitchLight');
+                    showNotification('Generating Light mutants');
+                }
             }
             e.preventDefault();
         }
-        // A for randomize actions (arrows)
+        // F for full random mutation variants
+        else if (key === 'f') {
+            if (typeof generateMutationVariants === 'function') {
+                generateMutationVariants('fullRandom');
+                showNotification('Generating Full Random mutants');
+            }
+            e.preventDefault();
+        }
+        // A for arrow mutation variants
         else if (key === 'a') {
-            glitchRandomizeActions();
-            showNotification('Randomized arrows');
+            if (typeof generateMutationVariants === 'function') {
+                generateMutationVariants('arrows');
+                showNotification('Generating Arrow mutants');
+            }
             e.preventDefault();
         }
-        // S for randomize states
+        // S for state mutation variants
         else if (key === 's') {
-            glitchRandomizeStates();
-            showNotification('Randomized states');
+            if (typeof generateMutationVariants === 'function') {
+                generateMutationVariants('states');
+                showNotification('Generating State mutants');
+            }
             e.preventDefault();
         }
-        // C for randomize symbols (colors)
+        // C for color mutation variants
         else if (key === 'c') {
-            glitchRandomizeSymbols();
-            showNotification('Randomized colors');
+            if (typeof generateMutationVariants === 'function') {
+                generateMutationVariants('colors');
+                showNotification('Generating Color mutants');
+            }
             e.preventDefault();
         }
-        // R for rotate actions
+        // R for rotate mutation variants
         else if (key === 'r' && !e.metaKey && !e.ctrlKey) {
-            glitchRotate();
-            showNotification('Rotated arrows');
+            if (typeof generateMutationVariants === 'function') {
+                generateMutationVariants('rotate');
+                showNotification('Generating Rotate mutants');
+            }
             e.preventDefault();
         }
         // Space for randomize all
@@ -973,8 +1024,14 @@ function init()
     
     // Listen for hash changes (bookmarks or manual URL edits)
     window.addEventListener('hashchange', function() {
+        // Skip if we're updating the hash ourselves (to avoid double-saving)
+        if (isUpdatingHash) {
+            console.log('hash changed by our own code, skipping reload');
+            return;
+        }
+        
         if (location.hash !== '') {
-            console.log('hash changed, loading program from URL');
+            console.log('hash changed externally, loading program from URL');
             
             var newProgram = Program.fromString(
                 location.hash.substr(1),
@@ -1131,14 +1188,14 @@ function decreaseSpeed() {
 }
 
 function increaseBrushSize() {
-    cursor.size = Math.min(cursor.size + 5, 200);
+    cursor.size = Math.min(cursor.size + 10, 200);
     updateStepperValue('cursorSize', cursor.size);
     updateCursorInfo();
     showNotification('Cursor size: ' + cursor.size);
 }
 
 function decreaseBrushSize() {
-    cursor.size = Math.max(cursor.size - 5, 5);
+    cursor.size = Math.max(cursor.size - 10, 10);
     updateStepperValue('cursorSize', cursor.size);
     updateCursorInfo();
     showNotification('Cursor size: ' + cursor.size);
@@ -1191,6 +1248,11 @@ function updateRender()
     if (startTime - lastTableUpdate >= TABLE_UPDATE_INTERVAL) {
         updateActiveCell();
         lastTableUpdate = startTime;
+    }
+    
+    // OPTIONAL: Auto Paint - DELETE THESE 3 LINES TO REMOVE
+    if (typeof updateAutoPaint === 'function') {
+        updateAutoPaint();
     }
 
     /*

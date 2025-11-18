@@ -104,16 +104,27 @@ div.copyright
 /* Mobile-responsive layout */
 .main-container {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: flex-start;
     gap: 20px;
-    padding: 10px;
+    padding: 0 10px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .canvas-section {
     flex-shrink: 0;
+}
+
+.variants-section {
+    flex-shrink: 0;
+    width: 512px;
+}
+
+.transition-table-section {
+    flex-shrink: 0;
+    width: 512px;
 }
 
 .canvas_frame {
@@ -123,29 +134,48 @@ div.copyright
 
 .controls-section {
     flex: 1;
-    max-width: 600px;
+    max-width: 370px;
     text-align: center;
 }
 
 .description-text {
-    max-width: 600px;
+    flex-basis: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Button controls styling */
-.button-controls {
+
+
+/* Section containers */
+.section-container {
     background: transparent;
     border: 2px solid rgb(255, 255, 255);
-    padding: 10px;
+    padding: 6px;
     margin-bottom: 8px;
 }
 
+.section-header h2 {
+    color: white;
+    font-family: "Arial", sans-serif;
+    text-align: center;
+    margin: 0 0 6px 0;
+}
+
+.section-header p {
+    color: #aaa;
+    font-family: "Arial", sans-serif;
+    text-align: center;
+}
+
 .control-group {
-    margin: 6px 0;
+    margin: 3px 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 .control-group strong {
@@ -167,6 +197,14 @@ div.copyright
     transition: none;
     min-height: 36px;
     -webkit-tap-highlight-color: transparent;
+}
+
+.control-group button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: #000;
+    color: #666;
+    border-color: #666;
 }
 
 /* Only apply hover on devices that support true hover */
@@ -229,6 +267,10 @@ div.copyright
         display: none;
     }
     
+    .mobile-title {
+        display: block !important;
+    }
+    
     .main-container {
         flex-direction: column;
         gap: 0;
@@ -267,6 +309,31 @@ div.copyright
         width: 100%;
         padding: 8px;
         box-sizing: border-box;
+    }
+    
+    .variants-section {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    
+    .variants-section .section-container {
+        max-width: 100%;
+    }
+    
+    .variants-section #variantContainer {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 4px;
+    }
+    
+    .transition-table-section {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    
+    .transition-table-section .section-container {
+        max-width: 100%;
     }
     
     .controls-section form {
