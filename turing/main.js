@@ -383,7 +383,7 @@ function shareDrawing() {
         // Show confirmation message
         var button = document.getElementById('shareButton');
         var originalText = button.innerHTML;
-        button.innerHTML = '✓ URL Copied!';
+        button.innerHTML = '✓ URL<br>Copied!';
         button.classList.add('copied');
         
         setTimeout(function() {

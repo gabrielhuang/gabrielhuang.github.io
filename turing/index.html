@@ -135,6 +135,7 @@
                         <button id="variantHistoryPrev" type="button" onclick="historyUndo();" style="padding: 3px 6px; font-size: 0.8em; min-height: auto; line-height: 1.3; max-width: 70px;" disabled>← Undo<br><span id="variantHistoryPrevVersion" style="font-size: 0.9em; color: #999;"></span></button>
                         <button type="button" onclick="glitchRandomizeAll();" title="Instantly randomize the entire transition table" style="background-color: #7c0082; color: white; font-weight: bold; line-height: 1.2; padding: 3px 12px; font-size: 0.8em; max-width: 100px;">Randomize<br>& Apply</button>
                         <button type="button" onclick="generateVariants();" title="Generate new mutants" style="padding: 3px 24px; font-size: 0.8em; line-height: 1.2; max-width: 100px;">Refresh<br>Mutants</button>
+                        <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing" style="padding: 3px 6px; font-size: 0.8em; line-height: 1.2; max-width: 90px;">Share<br>Drawing</button>
                     </div>
 
                     <p id="mutationNotice" style="margin: 0 0 2px 0; font-size: 0.85em; text-align: center; color: #aaa;">Click a mutation to apply it</p>
@@ -198,11 +199,6 @@
                                 <button type="button" id="autoRestartBtn" onclick="toggleAutoRestart();" class="toggle-button active" title="Toggle auto-restart">Auto-restart: ON</button>
                                 <button type="button" onclick="restartProg();">Restart (Esc)</button>
                                 <button type="button" onclick="resetProgram();" style="background-color: #d32f2f; color: white;">RESET</button>
-                            </div>
-                            
-                            <!-- Share -->
-                            <div class="control-group">
-                                <button type="button" id="shareButton" onclick="shareDrawing();" title="Copy shareable URL for this drawing">Share Drawing</button>
                             </div>
                         </div>
                     </div>
