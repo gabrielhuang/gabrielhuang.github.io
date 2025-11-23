@@ -919,7 +919,7 @@ function init()
             e.preventDefault();
         }
 
-        else if (event.key === 'r') {
+        else if (event.key === 'w') {
             // Randomize colormap when the "r" key is pressed
             randomizeColorMap();
             console.log(colorMap); // Display the new color map for debugging
