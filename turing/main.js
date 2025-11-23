@@ -855,7 +855,23 @@ function init()
         }
         writeCursorToMap();
     }, false);
-
+    
+    // Function to randomize the colormap
+    function randomizeColorMap() {
+        // Helper function to generate a random RGB color
+        function getRandomColor() {
+            return [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)];
+        }
+    
+        // Iterate through the colorMap and replace each color with a random color
+        for (let i = 0; i < colorMap.length; i += 3) {
+            const randomColor = getRandomColor();
+            colorMap[i] = randomColor[0];     // Red
+            colorMap[i + 1] = randomColor[1]; // Green
+            colorMap[i + 2] = randomColor[2]; // Blue
+        }
+    }
+    
     // Add keyboard event listeners
     document.addEventListener('keydown', function(e) {
         var key = e.key.toLowerCase();
@@ -902,6 +918,13 @@ function init()
             showNotification('Cursor size: ' + cursor.size);
             e.preventDefault();
         }
+
+        else if (event.key === 'r') {
+            // Randomize colormap when the "r" key is pressed
+            randomizeColorMap();
+            console.log(colorMap); // Display the new color map for debugging
+        }
+            
         // + to increase simulation speed
         else if (key === '+' || key === '=') {
             if (currentSpeedIndex < SPEED_LEVELS.length - 1) {
