@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1″>
+  <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" type="text/css" href="/css/colors.css">
+  <link rel="stylesheet" type="text/css" href="/main.css">
+  <link rel="stylesheet" type="text/css" href="/css/blog.css">
+  <link rel="icon" type="image/png" href="/img/favico.png">
+
+  <title>When Developer Tools Meet Long-Running Agents - Gabriel Huang</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-8LH518FP4T"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-8LH518FP4T');
+  </script>
+
+</head>
+
+<body>
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="/js/jquery-3.5.1.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+  <div class="container">
+
+    <nav>
+      <a class="" href="/#publications">Publications</a> |
+      <a class="" href="/blog/">Blog</a> |
+      <a class="" href="https://scholar.google.com/citations?user=_X1Tl-MAAAAJ">Google Scholar</a> |
+      <a class="" href="https://github.com/gabrielhuang/">Github</a> |
+      <a class="" href="https://naivepsychology.com">Naive Psychology</a> |
+      <a class="" href="https://www.linkedin.com/in/gbxhuang/">LinkedIn</a> |
+      <a class="" href="/gabriel-huang-march-2022.pdf">CV</a>
+
+    </nav>
+
+    <article class="blog-post">
+      <h1>If You Run Long-Running Agents, Your VS Code Might Be Leaking Credentials</h1>
+
+      <p class="blog-author">Gabriel Huang, January 3, 2026</p>
+
+      <img src="cover.jpg" alt="VS Code Remote-SSH credential leaking to long-running agents" class="img-fluid" style="margin: 2em 0;">
+
+      <h2>My Setup</h2>
+
+      <p>Like many developers, I started running <a href="https://www.cnbc.com/2026/02/02/openclaw-open-source-ai-agent-rise-controversy-clawdbot-moltbot-moltbook.html" target="_blank">OpenClaw</a> 24/7 on a Raspberry Pi. Some people use Mac minis, others use cloud instances—I went with a Pi. The setup seemed secure: I gave OpenClaw only a scoped GitHub token to access the specific repository I wanted it to work on.</p>
+
+      <p>Like many developers, I also use VS Code with the Remote-SSH extension to program and debug on the OpenClaw instance. I purposely deactivated forwarding of my SSH keys in my <code>~/.ssh/config</code>:</p>
+
+      <pre><code>Host ssh.naivepsychology.com
+    User gabi
+    IdentityFile ~/.ssh/id_ed25519_creampie
+    ProxyCommand cloudflared access ssh --hostname %h
+    ForwardAgent no</code></pre>
+
+      <p>I was expecting that using the scoped token would protect me. However, what I didn't realize is that because I'm logged into GitHub Copilot (like many people), VS Code Remote-SSH sessions expose a credential helper that allows cloning <em>all</em> my GitHub repos—including private ones that have nothing to do with OpenClaw's task.</p>
+
+      <p>The following demonstration shows how this happens. While I'm using OpenClaw, this issue applies to any long-running agent—whether it's AutoGPT, LangChain agents, custom automation scripts, or even traditional cron jobs that interact with your development environment. I'll show that even if I disconnect from VS Code, if a service was running in <code>tmux</code>, and I reconnect later using "Connect to Host" (reusing the existing remote server), that <code>tmux</code> session will regain access to all my GitHub repositories.</p>
+
+      <hr>
+
+      <h2>Step 1: Starting a Long-Running Service</h2>
+
+      <p>Using VS Code Remote-SSH, I connect to the remote host and launch a long-running background service inside a <code>tmux</code> session:</p>
+
+      <pre><code>gabi@bigcarrotcake:~/code/experiment-runner $ python research_worker.py
+[2026-02-02T15:45:57.617103] [research-worker] started (pid=29748)
+[2026-02-02T15:45:58.617308] [research-worker] entering main loop
+[2026-02-02T15:45:58.617376] [research-worker] idle</code></pre>
+
+      <p>I then disconnect VS Code, leaving the service running independently in tmux.</p>
+
+      <img src="1-tmux-start-research-worker.jpg" alt="tmux session running research-worker" class="img-fluid">
+
+      <hr>
+
+      <h2>Step 2: Normal Agent Operations</h2>
+
+      <p>Later, I ask OpenClaw via WhatsApp to restart the service. This is the kind of routine operational task I set up OpenClaw to handle:</p>
+
+      <blockquote>
+        <p>"Connect to the tmux session and restart my research worker."</p>
+      </blockquote>
+
+      <img src="2-whatsapp-restart-experiment-runner.jpeg" alt="WhatsApp request to restart service" class="img-fluid" style="width: 50%;">
+
+      <p>OpenClaw performs a clean restart via tmux:</p>
+
+      <pre><code>^C
+[2026-02-02T15:48:31.734046] [research-worker] received signal 2, shutting down
+$ python research_worker.py
+[2026-02-02T15:48:39.784741] [research-worker] started (pid=30207)</code></pre>
+
+      <img src="2-tmux-restart-research-worker.jpg" alt="tmux showing service restart" class="img-fluid">
+
+      <p>This works exactly as intended. OpenClaw can control the tmux session but has no GitHub credentials of its own.</p>
+
+      <hr>
+
+      <h2>Step 3: Testing Repository Access (Should Fail)</h2>
+
+      <p>With <code>ForwardAgent no</code> explicitly set in my SSH config and only a scoped GitHub token given to OpenClaw, I expect the agent shouldn't be able to access my private repositories. To verify this, I ask OpenClaw to test whether a private repository is accessible from the tmux session:</p>
+
+      <blockquote>
+        <p>"Can you check whether https://github.com/gabrielhuang/unrelated-private-repo.git is accessible from the tmux session? Just clone and list what's in it."</p>
+      </blockquote>
+
+      <img src="3-whatsapp-attack-fail.jpeg" alt="WhatsApp showing failed access attempt" class="img-fluid" style="width: 50%;">
+
+      <p>OpenClaw attempts the clone:</p>
+
+      <pre><code>Cloning into 'repo'...
+Error: connect ECONNREFUSED /run/user/1000/vscode-git-e044a21268.sock
+fatal: Authentication failed for 'https://github.com/gabrielhuang/unrelated-private-repo.git/'</code></pre>
+
+      <p>Good! Because no VS Code Remote-SSH session is active, the Git credential helper socket doesn't exist. The error message tells me Git tried to connect to <code>/run/user/1000/vscode-git-e044a21268.sock</code> but couldn't. The clone fails as expected.</p>
+
+      <img src="3-tmux-attack-fail.jpg" alt="tmux showing failed clone" class="img-fluid">
+
+      <hr>
+
+      <h2>Step 4: Reconnecting VS Code (Now It Works)</h2>
+
+      <p>Later, I reconnect to the same host using VS Code Remote-SSH to debug unrelated code. When VS Code establishes the Remote-SSH connection, it launches (or reuses) a long-lived server process that persists independently of terminal sessions:</p>
+
+      <pre><code>Found existing installation at /home/gabi/.vscode-server...
+Found running server (pid=43913)
+tmpDir==/run/user/1000==</code></pre>
+
+      <p>This server exposes Git authentication via a Unix socket:</p>
+
+      <pre><code>/run/user/1000/vscode-git-&lt;random&gt;.sock</code></pre>
+
+      <p>While VS Code remains connected, this socket is available to <em>any</em> process running under my user ID—including the tmux session that OpenClaw controls.</p>
+
+      <p>I issue the same request again via WhatsApp:</p>
+
+      <img src="4-whatsapp-attack-success.jpeg" alt="WhatsApp showing successful access" class="img-fluid" style="width: 50%;">
+
+      <p>This time, OpenClaw successfully clones the private repository:</p>
+
+      <pre><code>Cloning into 'unrelated-private-repo'...
+Receiving objects: 100% (9/9), done.
+
+Top-level files:
+INTERNAL_ONLY.md
+NOT_FOR_EXTERNAL_USE.md
+PRIVATE_CONTEXT.md</code></pre>
+
+      <img src="4-tmux-attack-success.jpg" alt="tmux showing successful clone and file listing" class="img-fluid">
+
+      <p>The only difference between Step 3 and Step 4: an active VS Code connection.</p>
+
+      <hr>
+
+      <h2>What Just Happened?</h2>
+
+      <p>OpenClaw's effective authority expanded purely as a function of whether I had VS Code open. This occurred without:</p>
+      <ul>
+        <li>An explicit authorization event</li>
+        <li>A configuration change</li>
+        <li>A credential handoff</li>
+        <li>OpenClaw itself being aware</li>
+      </ul>
+
+      <p>From OpenClaw's perspective, GitHub access appeared and disappeared solely based on whether I was using VS Code on the same machine.</p>
+
+      <h3>Why This Surprised Me</h3>
+
+      <p>This behavior is harmless in short-lived, human-driven SSH sessions. When I'm working interactively, I'm aware of what credentials are available and make real-time decisions about their use.</p>
+
+      <p>It becomes concerning when execution contexts persist across time, are controlled indirectly (via WhatsApp in my case), and act autonomously. OpenClaw's <code>tmux</code> session persists 24/7. My VS Code connections come and go. The result is temporal privilege escalation—OpenClaw temporarily gains access to repositories it shouldn't touch, purely based on ambient tooling state.</p>
+
+      <h3>The SSH Agent Forwarding Red Herring</h3>
+
+      <p>I had <code>ForwardAgent no</code> in my SSH config, so I thought I was safe. But looking at the VS Code Remote-SSH logs, I confirmed that SSH agent forwarding isn't involved at all:</p>
+
+      <pre><code>SSH_AUTH_SOCK====</code></pre>
+
+      <p>The <code>SSH_AUTH_SOCK</code> environment variable is empty. The access comes from VS Code's Git credential helper, not from forwarded SSH keys. This operates through an entirely separate channel that GitHub Copilot sets up automatically when you're logged in.</p>
+
+      <h3>Connection Mode Matters</h3>
+
+      <p>VS Code offers two ways to connect: "Connect to Host" (new window) and "Connect current window to Host."</p>
+
+      <img src="connect-current-window.jpg" alt="VS Code connection options showing 'Connect to Host' vs 'Connect current window to Host'" class="img-fluid">
+
+      <p>When I reconnect to an existing Remote-SSH session, VS Code reuses the existing server rather than bootstrapping a new one:</p>
+
+      <pre><code>Found existing data file
+Found local server running: {...}
+Found running server - short-circuiting install</code></pre>
+
+      <p>This makes the Git credential helper socket stable and predictable throughout the connection lifetime—which means the <code>tmux</code> session reliably regains access every time I reconnect.</p>
+
+      <h3>Beyond VS Code</h3>
+
+      <p>This isn't specific to VS Code or OpenClaw. It applies to any developer tool that forwards credentials for convenience:</p>
+      <ul>
+        <li>Git credential helpers (enabled by default with GitHub Copilot)</li>
+        <li>SSH agent forwarding</li>
+        <li>Cloud CLI sessions (AWS, GCP, Azure)</li>
+        <li>Docker credential stores</li>
+        <li>Kubernetes config contexts</li>
+      </ul>
+
+      <p>These tools were designed for bounded human sessions. As long-running agents become common infrastructure, their privilege boundaries need to be understood temporally, not just configurationally.</p>
+
+      <hr>
+
+      <h2>What I Learned (and What You Can Do)</h2>
+
+      <p>The question is no longer just "what can this agent access?" but "what can this agent access <em>right now</em>?"—and the answer changes based on which tools I happen to have open.</p>
+
+      <p>Scoped tokens aren't enough when ambient tooling state can override them. If you're running long-lived agents, be aware that developer tools like VS Code can create temporal privilege windows that persist in background sessions like <code>tmux</code>.</p>
+
+      <h3>Practical Mitigations</h3>
+
+      <p>If you're in a similar setup, here are some options to reduce the risk:</p>
+
+      <ul>
+        <li><strong>Use "Connect to Host" instead of "Connect current window to Host":</strong> Starting a fresh VS Code window creates a new remote server instance, which can help isolate credentials. However, this doesn't fully solve the problem—the credential helper socket still exists while you're connected.</li>
+        <li><strong>Sign out of GitHub Copilot when working on agent hosts:</strong> If you don't need Copilot on the remote machine, signing out will prevent the Git credential helper from being set up. This is the most direct fix but means losing Copilot on that host.</li>
+        <li><strong>Run agents on separate machines:</strong> Keep your development environment and long-running agent infrastructure on different hosts.</li>
+        <li><strong>Be mindful of when you connect:</strong> The credential window only exists while VS Code is connected. If you need to debug on the agent host, be aware that your agent temporarily has broader access during that time.</li>
+      </ul>
+
+      <p>None of these are perfect solutions—they're trade-offs between convenience and isolation. The real fix would be credential helpers that respect process boundaries, but until then, awareness is the first step.</p>
+
+    </article>
+
+  </div>
+
+</body>
+
+</html>
