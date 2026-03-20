@@ -6,8 +6,9 @@
 <title>Investment Comparison Tool</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: flex-start; padding: 20px; gap: 30px; color: #222; }
-  .sidebar { width: 220px; flex-shrink: 0; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: stretch; padding: 20px; gap: 30px; color: #222; overflow: hidden; }
+  .sidebar { width: 240px; flex-shrink: 0; overflow-y: auto; }
   .container { margin-bottom: 6px; }
   label { display: block; margin-bottom: 2px; font-size: 13px; }
   input[type="range"] { width: 100%; margin: 0; }
@@ -19,6 +20,21 @@
     border: 1px solid #bbb; border-radius: 3px; background: #f0f0f0; color: #555;
   }
   .toggles button.active { background: #3a8a8a; color: white; border-color: #3a8a8a; }
+
+  /* Sidebar groups */
+  .sidebar-group {
+    border-left: 3px solid #ddd; padding-left: 8px; margin-bottom: 10px;
+  }
+  .sidebar-group-title {
+    font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px; padding: 1px 0;
+  }
+  .group-property { border-left-color: #5b9bd5; }
+  .group-property .sidebar-group-title { color: #5b9bd5; }
+  .group-financing { border-left-color: #ed7d31; }
+  .group-financing .sidebar-group-title { color: #ed7d31; }
+  .group-market { border-left-color: #70ad47; }
+  .group-market .sidebar-group-title { color: #70ad47; }
 
   /* Equation table styles */
   .eq { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 2px; }
@@ -69,6 +85,48 @@
   details summary { cursor: pointer; font-weight: bold; color: #555; }
 
   .note { font-size: 11px; color: #888; margin-top: 6px; line-height: 1.4; }
+
+  /* Right panel layout */
+  .main-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .main-top { flex-shrink: 0; }
+  .main-scroll { flex: 1; overflow-y: auto; }
+
+  /* Year slider at top */
+  .year-bar {
+    background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px;
+    padding: 8px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+  }
+  .year-bar label { margin: 0; font-size: 15px; font-weight: bold; white-space: nowrap; }
+  .year-bar input[type="range"] { flex: 1; }
+
+  /* Chart */
+  .chart-container { margin-bottom: 8px; position: relative; }
+  #profitChart { width: 100%; height: 150px; border: 1px solid #e0e0e0; border-radius: 4px; background: #fafafa; }
+
+  /* Sensitivity table */
+  .sensitivity { margin-top: 10px; }
+  .sensitivity table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sensitivity th { text-align: left; padding: 3px 6px; background: #f0f0f0; font-size: 11px; color: #666; }
+  .sensitivity td { padding: 3px 6px; font-variant-numeric: tabular-nums; }
+  .sensitivity .current-row { background: rgba(58, 138, 138, 0.08); font-weight: bold; }
+  .sensitivity .scenario-label { font-size: 11px; color: #888; }
+
+  /* Share button */
+  .share-btn {
+    padding: 4px 10px; font-size: 11px; cursor: pointer;
+    border: 1px solid #3a8a8a; border-radius: 3px; background: #f0fafa; color: #3a8a8a;
+  }
+  .share-btn:hover { background: #3a8a8a; color: white; }
+  .share-copied { background: #3a8a8a; color: white; }
+
+  /* Mobile */
+  @media (max-width: 700px) {
+    body { flex-direction: column; padding: 10px; gap: 10px; overflow: auto; height: auto; }
+    .sidebar { width: 100%; overflow-y: visible; }
+    .main-panel { overflow: visible; }
+    .main-scroll { overflow-y: visible; }
+    #profitChart { height: 120px; }
+  }
 </style>
 </head>
 <body>
@@ -78,8 +136,10 @@
     <select id="presetDropdown">
       <option value="default">Default: Montreal 850k 4-plex 55k revenue</option>
     </select>
-    <button id="savePreset">Save Preset AS</button>
-    <button id="deletePreset">Delete Preset</button>
+    <div style="display:flex; gap:4px; margin-top:4px;">
+      <button id="savePreset" style="flex:1; font-size:11px; padding:3px;">Save As</button>
+      <button id="deletePreset" style="flex:1; font-size:11px; padding:3px;">Delete</button>
+    </div>
   </div>
 
   <div class="toggles">
@@ -88,58 +148,85 @@
     <button id="toggleRefi">Refi</button>
   </div>
 
-  <div class="container">
-    <label for="initialInvestment">Invest $<span id="initialInvestmentValue">170000</span><span id="propertyPrice"></span></label>
-    <input type="range" id="initialInvestment" value="170000" min="60000" max="200000" step="1000">
+  <!-- PROPERTY GROUP -->
+  <div class="sidebar-group group-property">
+    <div class="sidebar-group-title">Property</div>
+    <div class="container">
+      <label for="initialInvestment">Invest $<span id="initialInvestmentValue">170000</span><span id="propertyPrice"></span></label>
+      <input type="range" id="initialInvestment" value="170000" min="60000" max="200000" step="1000">
+    </div>
+    <div class="container">
+      <label for="initialRent">Rent: $<span id="initialRentValue">50000</span>/yr (MRB <span id="mrbValue">??</span>x)</label>
+      <input type="range" id="initialRent" value="50000" min="20000" max="80000" step="100">
+    </div>
+    <div class="container">
+      <label for="operatingCosts">Operating Costs: <span id="operatingCostsValue">1.5</span>% of value</label>
+      <input type="range" id="operatingCosts" value="1.5" min="0" max="5" step="0.1">
+    </div>
+    <div class="container">
+      <label for="vacancy">Vacancy: <span id="vacancyValue">5</span>%</label>
+      <input type="range" id="vacancy" value="5" min="0" max="20" step="1">
+    </div>
+    <div class="container">
+      <label for="capex">CapEx Reserve: <span id="capexValue">1</span>% of value</label>
+      <input type="range" id="capex" value="1" min="0" max="5" step="0.1">
+    </div>
   </div>
 
-  <div class="container">
-    <label for="initialRent">Rent: $<span id="initialRentValue">50000</span>/yr (MRB <span id="mrbValue">??</span>x)</label>
-    <input type="range" id="initialRent" value="50000" min="20000" max="80000" step="100">
+  <!-- FINANCING GROUP -->
+  <div class="sidebar-group group-financing">
+    <div class="sidebar-group-title">Financing</div>
+    <div class="container">
+      <label for="amortization">Amortization: <span id="amortizationValue">30</span> years</label>
+      <input type="range" id="amortization" value="30" min="25" max="30" step="5">
+    </div>
+    <div class="container">
+      <label for="interestRate">Mortgage Rate: <span id="interestRateValue">4.54</span>%</label>
+      <input type="range" id="interestRate" value="4.54" min="1" max="10" step="0.01">
+    </div>
   </div>
 
-  <div class="container">
-    <label for="annualStockGrowth">Stock Growth: <span id="annualStockGrowthValue">8</span>%/yr</label>
-    <input type="range" id="annualStockGrowth" value="8" min="0" max="20" step="0.1">
-  </div>
-
-  <div class="container">
-    <label for="annualPropertyGrowth">Property Growth: <span id="annualPropertyGrowthValue">4</span>%/yr</label>
-    <input type="range" id="annualPropertyGrowth" value="4" min="0" max="10" step="0.1">
-  </div>
-
-  <div class="container">
-    <label for="amortization">Amortization: <span id="amortizationValue">30</span> years</label>
-    <input type="range" id="amortization" value="30" min="25" max="30" step="5">
-  </div>
-
-  <div class="container">
-    <label for="interestRate">Mortgage Rate: <span id="interestRateValue">4.54</span>%</label>
-    <input type="range" id="interestRate" value="4.54" min="1" max="10" step="0.01">
-  </div>
-
-  <div class="container">
-    <label for="operatingCosts">Operating Costs: <span id="operatingCostsValue">1.5</span>% of value</label>
-    <input type="range" id="operatingCosts" value="1.5" min="0" max="5" step="0.1">
-  </div>
-
-  <div class="container">
-    <label for="rentalIncomeGrowth">Rent Growth: <span id="rentalIncomeGrowthValue">3</span>%/yr</label>
-    <input type="range" id="rentalIncomeGrowth" value="3" min="0" max="10" step="0.1">
+  <!-- MARKET ASSUMPTIONS GROUP -->
+  <div class="sidebar-group group-market">
+    <div class="sidebar-group-title">Market Assumptions</div>
+    <div class="container">
+      <label for="annualStockGrowth">Stock Growth: <span id="annualStockGrowthValue">8</span>%/yr</label>
+      <input type="range" id="annualStockGrowth" value="8" min="0" max="20" step="0.1">
+    </div>
+    <div class="container">
+      <label for="annualPropertyGrowth">Property Growth: <span id="annualPropertyGrowthValue">4</span>%/yr</label>
+      <input type="range" id="annualPropertyGrowth" value="4" min="0" max="10" step="0.1">
+    </div>
+    <div class="container">
+      <label for="rentalIncomeGrowth">Rent Growth: <span id="rentalIncomeGrowthValue">3</span>%/yr</label>
+      <input type="range" id="rentalIncomeGrowth" value="3" min="0" max="10" step="0.1">
+    </div>
   </div>
 
   <div class="note">
-    Tax rate: 45%. Capital gains: 50% inclusion.<br>
-    Taxable income = rent - interest - opex.
+    Tax rate: 45%. Capital gains: 50% inclusion (Canada).<br>
+    Taxable income = rent - interest - opex - capex.
   </div>
 </div>
 
-<div style="flex: 1; min-width: 0;">
-  <div style="margin-bottom: 8px;">
-    <label for="year" style="font-size: 14px; font-weight: bold;">Year <span id="yearValue">5</span></label>
-    <input type="range" id="year" value="5" min="0" max="32" step="1" style="width: 100%;">
+<div class="main-panel">
+  <div class="main-top">
+    <!-- YEAR SLIDER - prominent at top -->
+    <div class="year-bar">
+      <label for="year">Year <span id="yearValue">5</span></label>
+      <input type="range" id="year" value="5" min="0" max="32" step="1">
+      <button class="share-btn" id="shareBtn" title="Copy shareable link">Share</button>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-container">
+      <canvas id="profitChart"></canvas>
+    </div>
   </div>
-  <div id="cashflowinfo"></div>
+
+  <div class="main-scroll">
+    <div id="cashflowinfo"></div>
+  </div>
 </div>
 
 <script>
@@ -163,6 +250,54 @@
     showRefi = !showRefi;
     this.classList.toggle('active', showRefi);
     calculateInvestments();
+  });
+
+  // === URL HASH SHARING ===
+  const PARAM_KEYS = ['initialInvestment','initialRent','annualStockGrowth','annualPropertyGrowth',
+    'amortization','interestRate','operatingCosts','rentalIncomeGrowth','vacancy','capex','year'];
+
+  function encodeParams() {
+    const params = {};
+    PARAM_KEYS.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) params[k] = el.value;
+    });
+    return btoa(JSON.stringify(params));
+  }
+
+  function decodeAndApplyHash() {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return false;
+    try {
+      const params = JSON.parse(atob(hash));
+      PARAM_KEYS.forEach(k => {
+        if (params[k] !== undefined) {
+          const el = document.getElementById(k);
+          if (el) {
+            el.value = params[k];
+            const valEl = document.getElementById(k + 'Value');
+            if (valEl) valEl.textContent = params[k];
+          }
+        }
+      });
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function updateHash() {
+    history.replaceState(null, '', '#' + encodeParams());
+  }
+
+  document.getElementById('shareBtn').addEventListener('click', function() {
+    updateHash();
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      this.textContent = 'Copied!';
+      this.classList.add('share-copied');
+      setTimeout(() => { this.textContent = 'Share'; this.classList.remove('share-copied'); }, 1500);
+    }).catch(() => {
+      prompt('Copy this link:', url);
+    });
   });
 
   function maxLoanAmount(cashFlow, interestRate, termYears, propertyValue, mortgageBalance, equityOnly = false) {
@@ -196,6 +331,135 @@
     return v >= 0 ? 'c-result-pos' : 'c-result-neg';
   }
 
+  // === CHART DRAWING ===
+  function drawChart(displayRentalProfit, displayStockProfit, years, selectedYear) {
+    const canvas = document.getElementById('profitChart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height;
+    const pad = { top: 20, right: 14, bottom: 28, left: 60 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Find data range
+    let minV = 0, maxV = 0;
+    for (let i = 0; i <= years; i++) {
+      minV = Math.min(minV, displayRentalProfit[i], displayStockProfit[i]);
+      maxV = Math.max(maxV, displayRentalProfit[i], displayStockProfit[i]);
+    }
+    const range = maxV - minV || 1;
+    const margin = range * 0.08;
+    minV -= margin; maxV += margin;
+
+    function toX(yr) { return pad.left + (yr / years) * plotW; }
+    function toY(v) { return pad.top + (1 - (v - minV) / (maxV - minV)) * plotH; }
+
+    // Grid lines & labels
+    ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = 1;
+    const nTicks = 5;
+    ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    for (let t = 0; t <= nTicks; t++) {
+      const v = minV + (maxV - minV) * t / nTicks;
+      const y = toY(v);
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+      ctx.fillText('$' + (v / 1000).toFixed(0) + 'k', pad.left - 4, y + 3);
+    }
+
+    // X-axis labels
+    ctx.textAlign = 'center'; ctx.fillStyle = '#999';
+    for (let yr = 0; yr <= years; yr += 5) {
+      ctx.fillText('Y' + yr, toX(yr), H - pad.bottom + 14);
+    }
+
+    // Zero line
+    if (minV < 0 && maxV > 0) {
+      ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(pad.left, toY(0)); ctx.lineTo(W - pad.right, toY(0)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Selected year vertical line
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(toX(selectedYear), pad.top); ctx.lineTo(toX(selectedYear), pad.top + plotH); ctx.stroke();
+
+    // Draw lines
+    function drawLine(data, color) {
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i = 0; i <= years; i++) {
+        const x = toX(i), y = toY(data[i]);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    drawLine(displayRentalProfit, '#5b9bd5');
+    drawLine(displayStockProfit, '#ed7d31');
+
+    // Dots at selected year
+    function drawDot(data, color) {
+      ctx.fillStyle = color; ctx.beginPath();
+      ctx.arc(toX(selectedYear), toY(data[selectedYear]), 4, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    drawDot(displayRentalProfit, '#5b9bd5');
+    drawDot(displayStockProfit, '#ed7d31');
+
+    // Legend
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillStyle = '#5b9bd5'; ctx.textAlign = 'left';
+    ctx.fillText('Real Estate', pad.left + 4, pad.top - 6);
+    ctx.fillStyle = '#ed7d31';
+    ctx.fillText('Stocks', pad.left + 84, pad.top - 6);
+  }
+
+  // === SENSITIVITY ANALYSIS ===
+  function computeProfitForRate(baseParams, overrideKey, overrideVal, year) {
+    const p = {...baseParams, [overrideKey]: overrideVal};
+    const propertyPrice = p.initialInvestment / 0.20;
+    const vacancyRate = p.vacancy / 100;
+    const capexRate = p.capex / 100;
+    const years = 32;
+    const taxRate = 0.45;
+
+    let pv = Array.from({length: years+1}, (_, i) => propertyPrice * (1 + p.annualPropertyGrowth)**i);
+    let mb = Array.from({length: years+1}, (_, i) =>
+      i <= p.amortization ? (propertyPrice - p.initialInvestment) * ((1 + p.interestRate)**p.amortization - (1 + p.interestRate)**i) / ((1 + p.interestRate)**p.amortization - 1) : 0
+    );
+    let rent = Array.from({length: years+1}, (_, i) => p.initialRent * (1 + p.rentalIncomeGrowth)**i);
+    let opex = pv.map(v => v * p.operatingCosts);
+    let capexArr = pv.map(v => v * capexRate);
+    let vacancyLoss = rent.map(r => r * vacancyRate);
+    let ds = Array.from({length: years+1}, (_, i) =>
+      i < p.amortization ? (propertyPrice - p.initialInvestment) * p.interestRate * ((1 + p.interestRate)**p.amortization) / ((1 + p.interestRate)**p.amortization - 1) : 0
+    );
+    let intPaid = mb.map(v => v * p.interestRate);
+    let cf = Array.from({length: years+1}, (_, i) => rent[i] - vacancyLoss[i] - opex[i] - capexArr[i] - ds[i]);
+    let taxable = Array.from({length: years+1}, (_, i) => rent[i] - vacancyLoss[i] - intPaid[i] - opex[i] - capexArr[i]);
+    let tax = taxable.map(v => v * taxRate);
+    let atcf = cf.map((c, i) => c - tax[i]);
+
+    let cumATCF = [0];
+    for (let i = 1; i <= years; i++) cumATCF[i] = cumATCF[i-1] + atcf[i-1];
+
+    let equity = pv.map((v, i) => v - mb[i]);
+    let capGainsTax = pv.map(v => (v - propertyPrice) * 0.5 * taxRate);
+
+    const reProfit = equity[year] + cumATCF[year] - p.initialInvestment - capGainsTax[year];
+
+    // Stock
+    let stock = [p.initialInvestment];
+    for (let i = 1; i <= years; i++) stock[i] = stock[i-1] * (1 + p.annualStockGrowth) - Math.min(atcf[i-1], 0);
+    const stockProfit = stock[year] - p.initialInvestment;
+    const stockProfitAT = stockProfit > 0 ? stockProfit * (1 - 0.5 * taxRate) : stockProfit;
+
+    return { re: reProfit, stock: stockProfitAT };
+  }
+
   function calculateInvestments() {
     const years = 32;
     const initialInvestment = parseFloat(document.getElementById('initialInvestment').value);
@@ -210,6 +474,8 @@
     const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
     const operatingCosts = parseFloat(document.getElementById('operatingCosts').value) / 100;
     const rentalIncomeGrowth = parseFloat(document.getElementById('rentalIncomeGrowth').value) / 100;
+    const vacancyRate = parseFloat(document.getElementById('vacancy').value) / 100;
+    const capexRate = parseFloat(document.getElementById('capex').value) / 100;
     const div = showMonthly ? 12 : 1;
     const period = showMonthly ? '/mo' : '/yr';
     const taxRate = 0.45;
@@ -222,19 +488,21 @@
 
     // === DURING YEAR i ===
     let rentalIncomes = Array.from({length: years+1}, (_, i) => initialRent * (1 + rentalIncomeGrowth)**i);
+    let vacancyLoss = rentalIncomes.map(r => r * vacancyRate);
+    let effectiveRent = rentalIncomes.map((r, i) => r - vacancyLoss[i]);
     let operatingExpenses = propertyValues.map(v => v * operatingCosts);
+    let capexExpenses = propertyValues.map(v => v * capexRate);
     let debtService = Array.from({length: years+1}, (_, i) =>
       i < amortization ? (propertyPrice - initialInvestment) * interestRate * ((1 + interestRate)**amortization) / ((1 + interestRate)**amortization - 1) : 0
     );
     let interestPaid = Array.from({length: years+1}, (_, i) => mortgageBalance[i] * interestRate);
     let principalPaid = Array.from({length: years+1}, (_, i) => debtService[i] - interestPaid[i]);
-    let cashFlows = Array.from({length: years+1}, (_, i) => rentalIncomes[i] - operatingExpenses[i] - debtService[i]);
-    let taxableIncome = Array.from({length: years+1}, (_, i) => rentalIncomes[i] - interestPaid[i] - operatingExpenses[i]);
+    let cashFlows = Array.from({length: years+1}, (_, i) => effectiveRent[i] - operatingExpenses[i] - capexExpenses[i] - debtService[i]);
+    let taxableIncome = Array.from({length: years+1}, (_, i) => effectiveRent[i] - interestPaid[i] - operatingExpenses[i] - capexExpenses[i]);
     let incomeTaxes = taxableIncome.map(v => v * taxRate);
     let afterTaxCashFlow = cashFlows.map((cf, i) => cf - incomeTaxes[i]);
 
     // === CUMULATIVE CASH FLOW: index i = after i complete years ===
-    // [0] = 0 (no cash flow on day of purchase), [1] = year 0's CF, [2] = year 0+1 CF, etc.
     let cumulativeCashFlow = [0];
     let cumulativeAfterTaxCashFlow = [0];
     for (let i = 1; i <= years; i++) {
@@ -242,22 +510,19 @@
       cumulativeAfterTaxCashFlow[i] = cumulativeAfterTaxCashFlow[i-1] + afterTaxCashFlow[i-1];
     }
 
-    // === STOCK (with cash flow adjustment) ===
-    // All arrays use convention: index i = after i complete years
-    // stockPortfolio[0] = initial investment (no growth), [1] = after 1 year, etc.
+    // === STOCK (with negative cash flow adjustment only) ===
+    // When RE cash flow is negative, the stock investor keeps that money (add it).
+    // When RE cash flow is positive, the stock investor just compounds — no penalty.
     let stockPortfolio = Array.from({length: years+1}, () => 0);
     stockPortfolio[0] = initialInvestment;
     for (let i = 1; i <= years; i++) {
       const cf = showAfterTax ? afterTaxCashFlow[i-1] : cashFlows[i-1];
-      stockPortfolio[i] = stockPortfolio[i-1] * (1 + annualStockGrowth) - cf;
+      stockPortfolio[i] = stockPortfolio[i-1] * (1 + annualStockGrowth) - Math.min(cf, 0);
     }
     let stockProfit = stockPortfolio.map(v => v - initialInvestment);
     let stockProfitAfterTax = stockProfit.map(v => v > 0 ? v * (1 - 0.5 * taxRate) : v);
 
-    // === CUMULATIVE property values: index i = after i complete years ===
-    // [0] = purchase day (no growth), [1] = after 1 year of growth/payments, etc.
-    // propertyValues[i] already has this convention: propertyValues[0] = purchase price
-    // mortgageBalance[i] already has this convention: mortgageBalance[0] = initial loan
+    // === CUMULATIVE property values ===
     let cumPV = propertyValues;
     let cumMB = mortgageBalance;
     let cumEquity = cumPV.map((v, i) => v - cumMB[i]);
@@ -289,12 +554,16 @@
       if (displayRentalProfit[y] >= displayStockProfit[y]) { breakevenYear = y; break; }
     }
 
+    const year_of_interest = parseInt(document.getElementById('year').value);
+
+    // === DRAW CHART ===
+    drawChart(displayRentalProfit, displayStockProfit, years, year_of_interest);
+
     // === RENDER ===
     function generateCashflowInfo(i) {
       const displayCF = showAfterTax ? afterTaxCashFlow[i] : cashFlows[i];
       const cashOnCash = (displayCF / initialInvestment * 100);
 
-      // Equation row builder
       function eqRow(op, label, value, cls, detail) {
         const trClass = detail ? ' class="detail"' : '';
         return `<tr${trClass}>
@@ -311,14 +580,19 @@
           <td class="val ${cls}">${fmt(value)}</td>
         </tr>`;
       }
-      function eqSep() { return '<tr class="sep"><td colspan="3"></td></tr>'; }
 
       // === SECTION 1: CASH FLOW ===
       let html = `<h3>Year ${i} (age ${i + 31})</h3>`;
       html += `<div class="section-title">Cash Flow ${period} (${taxLabel})</div>`;
       html += `<table class="eq">`;
       html += eqRow('', 'Rental Income', rentalIncomes[i] / div, 'c-income');
+      if (vacancyRate > 0) {
+        html += eqRow('−', `Vacancy (${(vacancyRate*100).toFixed(0)}%)`, vacancyLoss[i] / div, 'c-expense');
+      }
       html += eqRow('−', 'Operating Expenses', operatingExpenses[i] / div, 'c-expense');
+      if (capexRate > 0) {
+        html += eqRow('−', 'CapEx Reserve', capexExpenses[i] / div, 'c-expense');
+      }
       html += eqRow('−', 'Debt Service', debtService[i] / div, 'c-expense');
       html += eqRow('', 'Interest', interestPaid[i] / div, 'c-expense', true);
       html += eqRow('', 'Principal', principalPaid[i] / div, 'c-income', true);
@@ -328,12 +602,11 @@
       html += eqResult('Cash Flow', displayCF / div);
       html += `</table>`;
 
-      // Key metrics
       html += `<div class="metric-row">
         <div class="metric"><span class="metric-label">Cash-on-cash:</span> <span class="metric-value">${cashOnCash.toFixed(1)}%</span></div>
       </div>`;
 
-      // === SECTION 2: BALANCE SHEET (end of year) ===
+      // === SECTION 2: BALANCE SHEET ===
       const cumCF = displayCumCF[i];
       const netWorth = cumEquity[i] + cumCF;
       html += `<div class="section-title">Balance Sheet (end of year ${i})</div>`;
@@ -386,6 +659,47 @@
         </div>
       </div>`;
 
+      // === SENSITIVITY TABLE ===
+      if (i > 0) {
+        const baseParams = {
+          initialInvestment, initialRent, annualStockGrowth, annualPropertyGrowth,
+          amortization, interestRate, operatingCosts, rentalIncomeGrowth,
+          vacancy: vacancyRate * 100, capex: capexRate * 100
+        };
+        const scenarios = [
+          { label: 'Rate', key: 'interestRate', bear: interestRate + 0.02, base: interestRate, bull: interestRate - 0.01,
+            bearLabel: `${((interestRate+0.02)*100).toFixed(1)}%`, baseLabel: `${(interestRate*100).toFixed(1)}%`, bullLabel: `${((interestRate-0.01)*100).toFixed(1)}%` },
+          { label: 'Prop Growth', key: 'annualPropertyGrowth', bear: Math.max(0, annualPropertyGrowth - 0.02), base: annualPropertyGrowth, bull: annualPropertyGrowth + 0.02,
+            bearLabel: `${(Math.max(0,annualPropertyGrowth-0.02)*100).toFixed(1)}%`, baseLabel: `${(annualPropertyGrowth*100).toFixed(1)}%`, bullLabel: `${((annualPropertyGrowth+0.02)*100).toFixed(1)}%` },
+          { label: 'Stock Growth', key: 'annualStockGrowth', bear: annualStockGrowth + 0.03, base: annualStockGrowth, bull: Math.max(0, annualStockGrowth - 0.03),
+            bearLabel: `${((annualStockGrowth+0.03)*100).toFixed(1)}%`, baseLabel: `${(annualStockGrowth*100).toFixed(1)}%`, bullLabel: `${(Math.max(0,annualStockGrowth-0.03)*100).toFixed(1)}%` },
+          { label: 'Vacancy', key: 'vacancy', bear: Math.min(20, vacancyRate * 100 + 10), base: vacancyRate * 100, bull: Math.max(0, vacancyRate * 100 - 3),
+            bearLabel: `${Math.min(20, vacancyRate*100+10).toFixed(0)}%`, baseLabel: `${(vacancyRate*100).toFixed(0)}%`, bullLabel: `${Math.max(0, vacancyRate*100-3).toFixed(0)}%` },
+        ];
+
+        html += `<div class="sensitivity">
+          <div class="section-title">Sensitivity at Year ${i} (RE - Stocks, ${taxLabel})</div>
+          <table>
+            <tr><th></th><th style="color:#c0392b">Bear</th><th>Base</th><th style="color:#27ae60">Bull</th></tr>`;
+
+        for (const s of scenarios) {
+          const bear = computeProfitForRate(baseParams, s.key, s.bear, i);
+          const base = computeProfitForRate(baseParams, s.key, s.base, i);
+          const bull = computeProfitForRate(baseParams, s.key, s.bull, i);
+          const bearDiff = bear.re - bear.stock;
+          const baseDiff = base.re - base.stock;
+          const bullDiff = bull.re - bull.stock;
+
+          html += `<tr>
+            <td><strong>${s.label}</strong></td>
+            <td><span class="scenario-label">${s.bearLabel}</span> <span class="${resultClass(bearDiff)}" style="padding:1px 4px;border-radius:2px">$${fmt(bearDiff)}</span></td>
+            <td class="current-row"><span class="scenario-label">${s.baseLabel}</span> <span class="${resultClass(baseDiff)}" style="padding:1px 4px;border-radius:2px">$${fmt(baseDiff)}</span></td>
+            <td><span class="scenario-label">${s.bullLabel}</span> <span class="${resultClass(bullDiff)}" style="padding:1px 4px;border-radius:2px">$${fmt(bullDiff)}</span></td>
+          </tr>`;
+        }
+        html += `</table></div>`;
+      }
+
       // === REFINANCING ===
       if (showRefi) {
         html += `<details open>
@@ -399,13 +713,13 @@
       document.getElementById('cashflowinfo').innerHTML = html;
     }
 
-    const year_of_interest = parseInt(document.getElementById('year').value);
     generateCashflowInfo(year_of_interest);
   }
 
   document.querySelectorAll('input[type="range"]').forEach(input => {
     input.addEventListener('input', function() {
-      document.getElementById(input.id + 'Value').innerText = input.value;
+      const valEl = document.getElementById(input.id + 'Value');
+      if (valEl) valEl.innerText = input.value;
       calculateInvestments();
     });
   });
@@ -447,7 +761,9 @@
       amortization: document.getElementById('amortization').value,
       interestRate: document.getElementById('interestRate').value,
       operatingCosts: document.getElementById('operatingCosts').value,
-      rentalIncomeGrowth: document.getElementById('rentalIncomeGrowth').value
+      rentalIncomeGrowth: document.getElementById('rentalIncomeGrowth').value,
+      vacancy: document.getElementById('vacancy').value,
+      capex: document.getElementById('capex').value
     };
     const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
     savedPresets[name] = preset;
@@ -477,7 +793,7 @@
       preset = {
         initialInvestment: 170000, initialRent: 50000, annualStockGrowth: 8,
         annualPropertyGrowth: 4, amortization: 25, interestRate: 4.4,
-        operatingCosts: 1.5, rentalIncomeGrowth: 3
+        operatingCosts: 1.5, rentalIncomeGrowth: 3, vacancy: 5, capex: 1
       };
     } else {
       const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
@@ -485,23 +801,16 @@
     }
     if (!preset) return false;
 
-    document.getElementById('initialInvestment').value = preset.initialInvestment;
-    document.getElementById('initialRent').value = preset.initialRent;
-    document.getElementById('annualStockGrowth').value = preset.annualStockGrowth;
-    document.getElementById('annualPropertyGrowth').value = preset.annualPropertyGrowth;
-    document.getElementById('amortization').value = preset.amortization;
-    document.getElementById('interestRate').value = preset.interestRate;
-    document.getElementById('operatingCosts').value = preset.operatingCosts;
-    document.getElementById('rentalIncomeGrowth').value = preset.rentalIncomeGrowth;
-
-    document.getElementById('initialInvestmentValue').textContent = preset.initialInvestment;
-    document.getElementById('initialRentValue').textContent = preset.initialRent;
-    document.getElementById('annualStockGrowthValue').textContent = preset.annualStockGrowth;
-    document.getElementById('annualPropertyGrowthValue').textContent = preset.annualPropertyGrowth;
-    document.getElementById('amortizationValue').textContent = preset.amortization;
-    document.getElementById('interestRateValue').textContent = preset.interestRate;
-    document.getElementById('operatingCostsValue').textContent = preset.operatingCosts;
-    document.getElementById('rentalIncomeGrowthValue').textContent = preset.rentalIncomeGrowth;
+    const fields = ['initialInvestment','initialRent','annualStockGrowth','annualPropertyGrowth',
+      'amortization','interestRate','operatingCosts','rentalIncomeGrowth','vacancy','capex'];
+    fields.forEach(f => {
+      const el = document.getElementById(f);
+      const valEl = document.getElementById(f + 'Value');
+      if (el && preset[f] !== undefined) {
+        el.value = preset[f];
+        if (valEl) valEl.textContent = preset[f];
+      }
+    });
 
     localStorage.setItem('lastPreset', presetName);
     calculateInvestments();
@@ -514,6 +823,12 @@
 
   window.onload = function () {
     loadPresets();
+    // Try URL hash first (shared link), then localStorage preset
+    if (decodeAndApplyHash()) {
+      history.replaceState(null, '', window.location.pathname);
+      calculateInvestments();
+      return;
+    }
     const lastPreset = localStorage.getItem('lastPreset');
     if (lastPreset) {
       const dropdown = document.getElementById('presetDropdown');
