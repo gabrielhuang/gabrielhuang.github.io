@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Investment Comparison Tool</title>
-<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
 <style>
-  body { font-family: Arial, sans-serif; display: flex; align-items: flex-start; padding: 20px; gap: 30px; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; align-items: flex-start; padding: 20px; gap: 30px; color: #222; }
   .sidebar { width: 220px; flex-shrink: 0; }
   .container { margin-bottom: 6px; }
   label { display: block; margin-bottom: 2px; font-size: 13px; }
@@ -16,26 +16,59 @@
   .toggles { display: flex; gap: 4px; margin-bottom: 8px; }
   .toggles button {
     flex: 1; padding: 4px 2px; font-size: 11px; cursor: pointer;
-    border: 1px solid #999; border-radius: 3px; background: #eee;
+    border: 1px solid #bbb; border-radius: 3px; background: #f0f0f0; color: #555;
   }
-  .toggles button.active { background: #4bc0c0; color: white; border-color: #4bc0c0; }
+  .toggles button.active { background: #3a8a8a; color: white; border-color: #3a8a8a; }
 
-  #cashflowinfo h4 { margin: 10px 0 4px; font-size: 13px; border-bottom: 1px solid #ddd; padding-bottom: 2px; }
-  #cashflowinfo h3 { margin: 0 0 8px; }
-  #cashflowinfo > div > div { margin-bottom: 1px; font-size: 13px; }
+  /* Equation table styles */
+  .eq { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 2px; }
+  .eq td { padding: 2px 6px; white-space: nowrap; }
+  .eq .op { width: 14px; text-align: center; color: #888; font-weight: bold; }
+  .eq .lbl { }
+  .eq .val { text-align: right; font-variant-numeric: tabular-nums; padding: 1px 8px; border-radius: 3px; }
+  .eq .detail { color: #888; font-size: 12px; }
+  .eq .detail .lbl { padding-left: 12px; }
+  .eq tr.result td { border-top: 2px solid #999; font-weight: bold; }
+  .eq tr.result .val { font-size: 14px; }
+  .eq tr.sep td { height: 4px; }
 
-  .profit-comparison {
-    border: 2px solid #4bc0c0; border-radius: 6px; padding: 8px; margin-top: 8px;
-    background: #f0fafa;
+  /* Color classes for values */
+  .c-income { background: rgba(76, 175, 80, 0.15); }
+  .c-expense { background: rgba(244, 67, 54, 0.12); }
+  .c-neutral { background: rgba(33, 150, 243, 0.10); }
+  .c-result-pos { background: rgba(76, 175, 80, 0.25); }
+  .c-result-neg { background: rgba(244, 67, 54, 0.20); }
+  .c-equity { background: rgba(33, 150, 243, 0.18); }
+
+  .section-title {
+    font-size: 13px; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 12px 0 4px; padding-bottom: 2px; border-bottom: 1px solid #ddd;
   }
-  .profit-comparison h4 { margin: 0 0 6px !important; border: none !important; font-size: 14px !important; }
-  .profit-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 13px; }
-  .profit-row .label { font-weight: bold; }
-  .profit-row .value { padding: 1px 6px; border-radius: 3px; }
-  .profit-winner { font-weight: bold; }
+  .section-title:first-child { margin-top: 0; }
+
+  h3 { margin: 0 0 8px; font-size: 18px; }
+
+  .profit-box {
+    border: 2px solid #3a8a8a; border-radius: 6px; padding: 10px; margin-top: 10px;
+    background: linear-gradient(135deg, #f0fafa, #fafaf0);
+  }
+  .profit-box h4 { margin: 0 0 8px; font-size: 14px; color: #333; }
+  .profit-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 13px; }
+  .profit-row .plbl { min-width: 100px; }
+  .profit-row .pval { padding: 2px 8px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+  .profit-row .prate { font-size: 11px; color: #666; margin-left: 6px; }
+  .profit-winner .plbl, .profit-winner .pval { font-weight: bold; }
+  .profit-diff { font-size: 11px; color: #666; margin-top: 6px; padding-top: 4px; border-top: 1px solid #ddd; }
+
+  .metric-row { display: flex; gap: 8px; margin-top: 6px; font-size: 12px; }
+  .metric { background: #f5f5f5; border-radius: 4px; padding: 3px 8px; }
+  .metric .metric-label { color: #888; }
+  .metric .metric-value { font-weight: bold; }
 
   details { margin-top: 8px; font-size: 13px; }
-  details summary { cursor: pointer; font-weight: bold; }
+  details summary { cursor: pointer; font-weight: bold; color: #555; }
+
+  .note { font-size: 11px; color: #888; margin-top: 6px; line-height: 1.4; }
 </style>
 </head>
 <body>
@@ -61,17 +94,17 @@
   </div>
 
   <div class="container">
-    <label for="initialRent">Rent: $<span id="initialRentValue">50000</span> per year (MRB <span id="mrbValue">??</span>x)</label>
+    <label for="initialRent">Rent: $<span id="initialRentValue">50000</span>/yr (MRB <span id="mrbValue">??</span>x)</label>
     <input type="range" id="initialRent" value="50000" min="20000" max="80000" step="100">
   </div>
 
   <div class="container">
-    <label for="annualStockGrowth">Annual Stock Growth: <span id="annualStockGrowthValue">8</span>%</label>
+    <label for="annualStockGrowth">Stock Growth: <span id="annualStockGrowthValue">8</span>%/yr</label>
     <input type="range" id="annualStockGrowth" value="8" min="0" max="20" step="0.1">
   </div>
 
   <div class="container">
-    <label for="annualPropertyGrowth">Annual Property Growth: <span id="annualPropertyGrowthValue">4</span>%</label>
+    <label for="annualPropertyGrowth">Property Growth: <span id="annualPropertyGrowthValue">4</span>%/yr</label>
     <input type="range" id="annualPropertyGrowth" value="4" min="0" max="10" step="0.1">
   </div>
 
@@ -81,50 +114,35 @@
   </div>
 
   <div class="container">
-    <label for="interestRate">Mortgage Interest Rate: <span id="interestRateValue">4.54</span>%</label>
+    <label for="interestRate">Mortgage Rate: <span id="interestRateValue">4.54</span>%</label>
     <input type="range" id="interestRate" value="4.54" min="1" max="10" step="0.01">
   </div>
 
   <div class="container">
-    <label for="operatingCosts">Operating Costs (% of Property): <span id="operatingCostsValue">1.5</span>%</label>
+    <label for="operatingCosts">Operating Costs: <span id="operatingCostsValue">1.5</span>% of value</label>
     <input type="range" id="operatingCosts" value="1.5" min="0" max="5" step="0.1">
   </div>
 
   <div class="container">
-    <label for="rentalIncomeGrowth">Rental Income Growth: <span id="rentalIncomeGrowthValue">3</span>%</label>
+    <label for="rentalIncomeGrowth">Rent Growth: <span id="rentalIncomeGrowthValue">3</span>%/yr</label>
     <input type="range" id="rentalIncomeGrowth" value="3" min="0" max="10" step="0.1">
   </div>
 
-  <div class="container">
-    <label for="year">Details for year <span id="yearValue">5</span></label>
-    <input type="range" id="year" value="5" min="0" max="32" step="1">
-  </div>
-  <div style="font-size: 11px; color: #666; margin-top: 4px;">
-    Tax rate: 45%. Capital gains: 50% inclusion. Taxable income = rent - interest - operating expenses.
+  <div class="note">
+    Tax rate: 45%. Capital gains: 50% inclusion.<br>
+    Taxable income = rent - interest - opex.
   </div>
 </div>
 
-<div>
-  <!-- <canvas id="investmentChart"></canvas> -->
+<div style="flex: 1; min-width: 0;">
+  <div style="margin-bottom: 8px;">
+    <label for="year" style="font-size: 14px; font-weight: bold;">Year <span id="yearValue">5</span></label>
+    <input type="range" id="year" value="5" min="0" max="32" step="1" style="width: 100%;">
+  </div>
   <div id="cashflowinfo"></div>
 </div>
 
 <script>
-  /* Chart commented out for now
-  const ctx = document.getElementById('investmentChart').getContext('2d');
-  let investmentChart = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: [], datasets: [] },
-    options: {
-      animation: false,
-      scales: { y: { min: -200000 } },
-      plugins: { tooltip: { mode: 'index', intersect: false } },
-      responsive: true, maintainAspectRatio: true,
-    }
-  });
-  */
-
-  // Toggle state
   let showMonthly = false;
   let showAfterTax = true;
   let showRefi = false;
@@ -151,15 +169,31 @@
     const maxLoanFromEquity = propertyValue * 0.8 - mortgageBalance;
     if (equityOnly) return maxLoanFromEquity;
     if (cashFlow <= 0) return 0;
-    const r = interestRate;
-    const n = termYears;
-    const P = cashFlow;
+    const r = interestRate, n = termYears, P = cashFlow;
     if (r === 0) return Math.min(P * n, maxLoanFromEquity);
-    else return Math.min(maxLoanFromEquity, P * ((1 + r)**n - 1) / (r * (1 + r)**n));
+    return Math.min(maxLoanFromEquity, P * ((1 + r)**n - 1) / (r * (1 + r)**n));
   }
 
   function fmt(v) {
-    return typeof v === 'number' ? v.toLocaleString(undefined, {maximumFractionDigits: 0}) : v;
+    if (typeof v !== 'number') return v;
+    const neg = v < 0;
+    const s = Math.abs(v).toLocaleString(undefined, {maximumFractionDigits: 0});
+    return neg ? `(${s})` : s;
+  }
+
+  function fmtSigned(v) {
+    if (typeof v !== 'number') return v;
+    const s = Math.abs(v).toLocaleString(undefined, {maximumFractionDigits: 0});
+    return v < 0 ? `- ${s}` : `+ ${s}`;
+  }
+
+  function colorClass(v, isExpense) {
+    if (isExpense) return v > 0 ? 'c-expense' : 'c-income';
+    return v >= 0 ? 'c-income' : 'c-expense';
+  }
+
+  function resultClass(v) {
+    return v >= 0 ? 'c-result-pos' : 'c-result-neg';
   }
 
   function calculateInvestments() {
@@ -178,17 +212,15 @@
     const rentalIncomeGrowth = parseFloat(document.getElementById('rentalIncomeGrowth').value) / 100;
     const div = showMonthly ? 12 : 1;
     const period = showMonthly ? '/mo' : '/yr';
+    const taxRate = 0.45;
 
-    let taxRate = 0.45;
-
-    // === BEGINNING OF YEAR i: snapshot values ===
+    // === BEGINNING OF YEAR i ===
     let propertyValues = Array.from({length: years+1}, (_, i) => propertyPrice * (1 + annualPropertyGrowth)**i);
     let mortgageBalance = Array.from({length: years+1}, (_, i) =>
       i <= amortization ? (propertyPrice - initialInvestment) * ((1 + interestRate)**amortization - (1 + interestRate)**i) / ((1 + interestRate)**amortization - 1) : 0
     );
-    let equity = propertyValues.map((v, i) => v - mortgageBalance[i]);
 
-    // === DURING YEAR i: flows ===
+    // === DURING YEAR i ===
     let rentalIncomes = Array.from({length: years+1}, (_, i) => initialRent * (1 + rentalIncomeGrowth)**i);
     let operatingExpenses = propertyValues.map(v => v * operatingCosts);
     let debtService = Array.from({length: years+1}, (_, i) =>
@@ -197,148 +229,173 @@
     let interestPaid = Array.from({length: years+1}, (_, i) => mortgageBalance[i] * interestRate);
     let principalPaid = Array.from({length: years+1}, (_, i) => debtService[i] - interestPaid[i]);
     let cashFlows = Array.from({length: years+1}, (_, i) => rentalIncomes[i] - operatingExpenses[i] - debtService[i]);
-
-    // Tax during year i
     let taxableIncome = Array.from({length: years+1}, (_, i) => rentalIncomes[i] - interestPaid[i] - operatingExpenses[i]);
     let incomeTaxes = taxableIncome.map(v => v * taxRate);
     let afterTaxCashFlow = cashFlows.map((cf, i) => cf - incomeTaxes[i]);
 
-    // === END OF YEAR i: cumulative ===
-    let cumulativeCashFlow = cashFlows.reduce((acc, curr, i) => [...acc, (acc[i-1] || 0) + curr], []);
-    let cumulativeAfterTaxCashFlow = afterTaxCashFlow.reduce((acc, curr, i) => [...acc, (acc[i-1] || 0) + curr], []);
+    // === CUMULATIVE CASH FLOW: index i = after i complete years ===
+    // [0] = 0 (no cash flow on day of purchase), [1] = year 0's CF, [2] = year 0+1 CF, etc.
+    let cumulativeCashFlow = [0];
+    let cumulativeAfterTaxCashFlow = [0];
+    for (let i = 1; i <= years; i++) {
+      cumulativeCashFlow[i] = cumulativeCashFlow[i-1] + cashFlows[i-1];
+      cumulativeAfterTaxCashFlow[i] = cumulativeAfterTaxCashFlow[i-1] + afterTaxCashFlow[i-1];
+    }
 
-    // === STOCK COMPARISON ===
-    // Stock strategy: invest initialInvestment, plus each year invest/withdraw the rental cash flow difference
-    // If rental has negative cash flow of X, stock investor keeps that X (doesn't spend it)
-    // If rental has positive cash flow of X, stock investor doesn't get it
-    // So stock investor additionally invests -cashFlow each year (negative CF = positive stock contribution)
+    // === STOCK (with cash flow adjustment) ===
+    // All arrays use convention: index i = after i complete years
+    // stockPortfolio[0] = initial investment (no growth), [1] = after 1 year, etc.
     let stockPortfolio = Array.from({length: years+1}, () => 0);
-    stockPortfolio[0] = initialInvestment; // lump sum at start
+    stockPortfolio[0] = initialInvestment;
     for (let i = 1; i <= years; i++) {
       const cf = showAfterTax ? afterTaxCashFlow[i-1] : cashFlows[i-1];
-      // Grow previous portfolio, then add the cash flow the stock investor saves by not owning property
-      // If rental CF is negative, stock investor also spends that money (opportunity cost is symmetric)
-      // So stock investor adds (-cf) if cf < 0 (saves money), or subtracts cf if cf > 0 (misses out)
       stockPortfolio[i] = stockPortfolio[i-1] * (1 + annualStockGrowth) - cf;
     }
     let stockProfit = stockPortfolio.map(v => v - initialInvestment);
-    let stockProfitAfterCapGains = stockProfit.map(v => v > 0 ? v * (1 - 0.5 * taxRate) : v);
-    let displayStockProfit = showAfterTax ? stockProfitAfterCapGains : stockProfit;
+    let stockProfitAfterTax = stockProfit.map(v => v > 0 ? v * (1 - 0.5 * taxRate) : v);
 
-    // === END-OF-YEAR property values ===
-    let endOfYearEquity = Array.from({length: years+1}, (_, i) => {
-      let pv = i < years ? propertyValues[i+1] : propertyValues[i] * (1 + annualPropertyGrowth);
-      let mb = i < years ? mortgageBalance[i+1] : Math.max(0, mortgageBalance[i] - principalPaid[i]);
-      return pv - mb;
-    });
-    let endOfYearAppreciation = Array.from({length: years+1}, (_, i) => {
-      let pv = i < years ? propertyValues[i+1] : propertyValues[i] * (1 + annualPropertyGrowth);
-      return pv - propertyPrice;
-    });
-    let endOfYearCapGainsTax = endOfYearAppreciation.map(v => v * 0.5 * taxRate);
+    // === CUMULATIVE property values: index i = after i complete years ===
+    // [0] = purchase day (no growth), [1] = after 1 year of growth/payments, etc.
+    // propertyValues[i] already has this convention: propertyValues[0] = purchase price
+    // mortgageBalance[i] already has this convention: mortgageBalance[0] = initial loan
+    let cumPV = propertyValues;
+    let cumMB = mortgageBalance;
+    let cumEquity = cumPV.map((v, i) => v - cumMB[i]);
+    let cumAppreciation = cumPV.map(v => v - propertyPrice);
+    let cumCapGainsTax = cumAppreciation.map(v => v * 0.5 * taxRate);
+    let totalDebtPaid = cumMB.map((v, i) => mortgageBalance[0] - v);
 
-    // === TOTAL PROFIT (REAL ESTATE) ===
-    let rentalProfitBeforeTax = Array.from({length: years+1}, (_, i) =>
-      endOfYearEquity[i] + cumulativeCashFlow[i] - initialInvestment
-    );
-    let rentalProfitAfterTax = Array.from({length: years+1}, (_, i) =>
-      endOfYearEquity[i] + cumulativeAfterTaxCashFlow[i] - initialInvestment - endOfYearCapGainsTax[i]
-    );
-    let displayRentalProfit = showAfterTax ? rentalProfitAfterTax : rentalProfitBeforeTax;
-    let displayCumulativeCF = showAfterTax ? cumulativeAfterTaxCashFlow : cumulativeCashFlow;
+    // === TOTAL PROFIT ===
+    let rentalProfitBT = Array.from({length: years+1}, (_, i) => cumEquity[i] + cumulativeCashFlow[i] - initialInvestment);
+    let rentalProfitAT = Array.from({length: years+1}, (_, i) => cumEquity[i] + cumulativeAfterTaxCashFlow[i] - initialInvestment - cumCapGainsTax[i]);
+
+    let displayRentalProfit = showAfterTax ? rentalProfitAT : rentalProfitBT;
+    let displayStockProfit = showAfterTax ? stockProfitAfterTax : stockProfit;
+    let displayCumCF = showAfterTax ? cumulativeAfterTaxCashFlow : cumulativeCashFlow;
     const taxLabel = showAfterTax ? 'after tax' : 'before tax';
 
     let maxNewLoanAmounts = cashFlows.map((cf, i) => maxLoanAmount(cf, interestRate, amortization, propertyValues[i], mortgageBalance[i], true));
 
-    // === ANNUALIZED RETURN ===
-    function annualizedReturn(profit, years, initial) {
-      if (years === 0) return 0;
+    function annualizedReturn(profit, yrs, initial) {
+      if (yrs === 0) return 0;
       const total = initial + profit;
       if (total <= 0) return -100;
-      return (Math.pow(total / initial, 1 / years) - 1) * 100;
+      return (Math.pow(total / initial, 1 / yrs) - 1) * 100;
+    }
+
+    // Find breakeven year
+    let breakevenYear = null;
+    for (let y = 1; y <= years; y++) {
+      if (displayRentalProfit[y] >= displayStockProfit[y]) { breakevenYear = y; break; }
     }
 
     // === RENDER ===
     function generateCashflowInfo(i) {
-      const row = (label, value, color) => `
-        <div>
-          <strong>${label}:</strong>
-          <span style="background-color: ${color}; padding: 1px 4px; border-radius: 2px;">${fmt(value)}</span>
-        </div>`;
-
       const displayCF = showAfterTax ? afterTaxCashFlow[i] : cashFlows[i];
+      const cashOnCash = (displayCF / initialInvestment * 100);
 
-      let html = `<div>
-        <h3>Year ${i} (age ${i + 31})</h3>
-
-        <h4>Beginning of Year ${i}</h4>
-        ${row('Property Value', propertyValues[i], 'rgba(75,192,192,0.8)')}
-        ${row('Mortgage Balance', mortgageBalance[i], 'rgba(255,0,0,0.3)')}
-        ${row('Equity', equity[i], 'rgba(75,192,192,0.3)')}
-
-        <h4>During Year ${i}</h4>
-        ${row('Gross Rental Income', rentalIncomes[i] / div, 'rgba(255,206,86,0.8)')}
-        ${row('Operating Expenses', operatingExpenses[i] / div, 'rgba(54,162,235,0.4)')}
-        ${row('Debt Service', debtService[i] / div, 'rgba(255,159,64,0.4)')}
-        ${row('  Interest', interestPaid[i] / div, 'rgba(255,0,0,0.2)')}
-        ${row('  Principal', principalPaid[i] / div, 'rgba(100,200,100,0.3)')}`;
-
-      if (showAfterTax) {
-        html += `
-        ${row('Income Tax', incomeTaxes[i] / div, 'rgba(255,0,0,0.2)')}`;
+      // Equation row builder
+      function eqRow(op, label, value, cls, detail) {
+        const trClass = detail ? ' class="detail"' : '';
+        return `<tr${trClass}>
+          <td class="op">${op}</td>
+          <td class="lbl">${label}</td>
+          <td class="val ${cls}">${fmt(Math.abs(value))}</td>
+        </tr>`;
       }
-
-      html += `
-        ${row('Cash Flow (' + taxLabel + ')' + period, displayCF / div, '#ffcc00')}
-
-        <h4>End of Year ${i}</h4>
-        ${row('Equity (EOY)', endOfYearEquity[i], 'rgba(75,192,192,0.3)')}
-        ${row('Total Debt Paid', mortgageBalance[0] - (i < years ? mortgageBalance[i+1] : Math.max(0, mortgageBalance[i] - principalPaid[i])), 'rgba(100,200,100,0.3)')}
-        ${row('Property Appreciation', endOfYearAppreciation[i], 'rgba(54,162,235,0.4)')}
-        ${row('Cumulative Cash Flow (' + taxLabel + ')', displayCumulativeCF[i], '#c0f0c0')}`;
-
-      if (showAfterTax) {
-        html += `
-        ${row('Capital Gains Tax', endOfYearCapGainsTax[i], 'rgba(255,0,0,0.2)')}`;
+      function eqResult(label, value) {
+        const cls = resultClass(value);
+        return `<tr class="result">
+          <td class="op">=</td>
+          <td class="lbl">${label}</td>
+          <td class="val ${cls}">${fmt(value)}</td>
+        </tr>`;
       }
+      function eqSep() { return '<tr class="sep"><td colspan="3"></td></tr>'; }
 
-      // Profit comparison box
+      // === SECTION 1: CASH FLOW ===
+      let html = `<h3>Year ${i} (age ${i + 31})</h3>`;
+      html += `<div class="section-title">Cash Flow ${period} (${taxLabel})</div>`;
+      html += `<table class="eq">`;
+      html += eqRow('', 'Rental Income', rentalIncomes[i] / div, 'c-income');
+      html += eqRow('−', 'Operating Expenses', operatingExpenses[i] / div, 'c-expense');
+      html += eqRow('−', 'Debt Service', debtService[i] / div, 'c-expense');
+      html += eqRow('', 'Interest', interestPaid[i] / div, 'c-expense', true);
+      html += eqRow('', 'Principal', principalPaid[i] / div, 'c-income', true);
+      if (showAfterTax) {
+        html += eqRow('−', 'Income Tax', incomeTaxes[i] / div, 'c-expense');
+      }
+      html += eqResult('Cash Flow', displayCF / div);
+      html += `</table>`;
+
+      // Key metrics
+      html += `<div class="metric-row">
+        <div class="metric"><span class="metric-label">Cash-on-cash:</span> <span class="metric-value">${cashOnCash.toFixed(1)}%</span></div>
+      </div>`;
+
+      // === SECTION 2: BALANCE SHEET (end of year) ===
+      const cumCF = displayCumCF[i];
+      const netWorth = cumEquity[i] + cumCF;
+      html += `<div class="section-title">Balance Sheet (end of year ${i})</div>`;
+      html += `<table class="eq">`;
+      html += eqRow('', 'Property Value', cumPV[i], 'c-neutral');
+      html += eqRow(cumCF >= 0 ? '+' : '−', 'Cash (cumulative CF)', Math.abs(cumCF), colorClass(cumCF, false));
+      html += eqRow('−', 'Mortgage', cumMB[i], 'c-expense');
+      html += eqResult('Net Worth', netWorth);
+      html += `</table>`;
+
+      html += `<div class="metric-row">
+        <div class="metric"><span class="metric-label">LTV:</span> <span class="metric-value">${(cumMB[i] / cumPV[i] * 100).toFixed(0)}%</span></div>
+        <div class="metric"><span class="metric-label">Equity (no cash):</span> <span class="metric-value">$${fmt(cumEquity[i])}</span></div>
+      </div>`;
+
+      // === SECTION 3: TOTAL PROFIT ===
+      html += `<div class="section-title">Total Profit Breakdown (${taxLabel})</div>`;
+      html += `<table class="eq">`;
+      html += eqRow('', 'Property Appreciation', cumAppreciation[i], 'c-income');
+      html += eqRow('+', 'Total Debt Paid', totalDebtPaid[i], 'c-income');
+      html += eqRow(fmtSigned(displayCumCF[i]).charAt(0), 'Cumulative Cash Flow', Math.abs(displayCumCF[i]), colorClass(displayCumCF[i], false));
+      if (showAfterTax) {
+        html += eqRow('−', 'Capital Gains Tax', cumCapGainsTax[i], 'c-expense');
+      }
+      html += eqResult('Total Profit (Real Estate)', displayRentalProfit[i]);
+      html += `</table>`;
+
+      // === PROFIT COMPARISON BOX ===
       const rp = displayRentalProfit[i];
       const sp = displayStockProfit[i];
       const rWins = rp >= sp;
       const rReturn = i > 0 ? annualizedReturn(rp, i, initialInvestment) : 0;
       const sReturn = i > 0 ? annualizedReturn(sp, i, initialInvestment) : 0;
 
-      html += `
-      <div class="profit-comparison">
-        <h4>Total Profit after ${i} years (${taxLabel})</h4>
-        <div class="profit-row">
-          <span class="label ${rWins ? 'profit-winner' : ''}">Real Estate:</span>
-          <span class="value ${rWins ? 'profit-winner' : ''}" style="background:rgba(75,192,192,0.5)">
-            $${fmt(rp)} (${rReturn.toFixed(1)}%/yr)
-          </span>
+      html += `<div class="profit-box">
+        <h4>Real Estate vs. Stocks after ${i} year${i === 1 ? '' : 's'}</h4>
+        <div class="profit-row ${rWins ? 'profit-winner' : ''}">
+          <span class="plbl">Real Estate</span>
+          <span class="pval ${resultClass(rp)}">$${fmt(rp)}</span>
+          <span class="prate">${rReturn.toFixed(1)}%/yr</span>
         </div>
-        <div class="profit-row">
-          <span class="label ${!rWins ? 'profit-winner' : ''}">Stocks (${(annualStockGrowth*100).toFixed(1)}%):</span>
-          <span class="value ${!rWins ? 'profit-winner' : ''}" style="background:rgba(255,150,40,0.5)">
-            $${fmt(sp)} (${sReturn.toFixed(1)}%/yr)
-          </span>
+        <div class="profit-row ${!rWins ? 'profit-winner' : ''}">
+          <span class="plbl">Stocks (${(annualStockGrowth*100).toFixed(1)}%)</span>
+          <span class="pval ${resultClass(sp)}">$${fmt(sp)}</span>
+          <span class="prate">${sReturn.toFixed(1)}%/yr</span>
         </div>
-        <div style="font-size:11px;color:#666;margin-top:4px;">
-          Difference: $${fmt(rp - sp)} in favor of ${rWins ? 'real estate' : 'stocks'}
+        <div class="profit-diff">
+          ${rWins ? 'Real estate' : 'Stocks'} wins by $${fmt(Math.abs(rp - sp))}
+          ${breakevenYear !== null ? ` &middot; RE breaks even at year ${breakevenYear}` : ' &middot; RE never catches up'}
         </div>
       </div>`;
 
-      // Refinancing (collapsible)
+      // === REFINANCING ===
       if (showRefi) {
-        html += `
-        <details open>
+        html += `<details open>
           <summary>Refinancing</summary>
-          ${row('Max New Loan (80% LTV)', maxNewLoanAmounts[i], 'rgba(255,255,0,0.4)')}
+          <table class="eq">
+            ${eqRow('', 'Max New Loan (80% LTV)', maxNewLoanAmounts[i], 'c-neutral')}
+          </table>
         </details>`;
       }
 
-      html += `</div>`;
       document.getElementById('cashflowinfo').innerHTML = html;
     }
 
@@ -365,6 +422,7 @@
     if (presetName) {
       savePreset(presetName);
       document.getElementById('presetDropdown').value = presetName;
+      localStorage.setItem('lastPreset', presetName);
       calculateInvestments();
       alert(`Preset "${presetName}" saved`);
     }
@@ -413,10 +471,9 @@
     }
   }
 
-  document.getElementById('presetDropdown').addEventListener('change', function () {
-    const presetName = this.value;
+  function applyPreset(presetName) {
     let preset;
-    if (this.value === 'default') {
+    if (presetName === 'default') {
       preset = {
         initialInvestment: 170000, initialRent: 50000, annualStockGrowth: 8,
         annualPropertyGrowth: 4, amortization: 25, interestRate: 4.4,
@@ -426,7 +483,7 @@
       const savedPresets = JSON.parse(localStorage.getItem('presets') || '{}');
       preset = savedPresets[presetName];
     }
-    if(!preset) { alert('No preset found with name', presetName); return; }
+    if (!preset) return false;
 
     document.getElementById('initialInvestment').value = preset.initialInvestment;
     document.getElementById('initialRent').value = preset.initialRent;
@@ -445,15 +502,29 @@
     document.getElementById('interestRateValue').textContent = preset.interestRate;
     document.getElementById('operatingCostsValue').textContent = preset.operatingCosts;
     document.getElementById('rentalIncomeGrowthValue').textContent = preset.rentalIncomeGrowth;
+
+    localStorage.setItem('lastPreset', presetName);
     calculateInvestments();
+    return true;
+  }
+
+  document.getElementById('presetDropdown').addEventListener('change', function () {
+    applyPreset(this.value);
   });
 
   window.onload = function () {
     loadPresets();
+    const lastPreset = localStorage.getItem('lastPreset');
+    if (lastPreset) {
+      const dropdown = document.getElementById('presetDropdown');
+      if (dropdown.querySelector(`option[value="${lastPreset}"]`)) {
+        dropdown.value = lastPreset;
+        applyPreset(lastPreset);
+        return;
+      }
+    }
     calculateInvestments();
   };
-
 </script>
-
 </body>
 </html>
