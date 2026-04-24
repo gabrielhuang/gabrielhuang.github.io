@@ -5,9 +5,9 @@
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta http-equiv=“Pragma” content=”no-cache”>
-  <meta http-equiv=“Expires” content=”-1″>
-  <meta http-equiv=“CACHE-CONTROL” content=”NO-CACHE”>
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1″>
+  <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -20,7 +20,7 @@
   <link rel="icon" type="image/png" href="img/favico.png">
 
   <title>Gabriel Huang</title>
-  
+
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-8LH518FP4T"></script>
   <script>
@@ -30,7 +30,7 @@
 
   gtag('config', 'G-8LH518FP4T');
   </script>
-  
+
 </head>
 
 <body>
@@ -46,9 +46,6 @@
     crossorigin="anonymous"></script>
 
 
-
-
-
   <div class="container">
 
     <nav>
@@ -56,92 +53,131 @@
       <a class="" href="/blog/">Blog</a> |
       <a class="" href="https://scholar.google.com/citations?user=_X1Tl-MAAAAJ">Google Scholar</a> |
       <a class="" href="https://github.com/gabrielhuang/">Github</a> |
-      <a class="" href="https://naivepsychology.com">Naive Psychology</a> |
+      <a class="" href="https://gabrielhuang.github.io/turing/#2,3,0,2,2,0,0,0,1,1,3,1,2,0,1,0,2,1,1,3">Turing Glitcher</a> |
       <a class="" href="https://www.linkedin.com/in/gbxhuang/">LinkedIn</a> |
-      <a class="" href="./gabriel-huang-march-2022.pdf">CV</a>
-
+      <a class="" href="./gabriel-huang-april-2026.pdf">CV</a>
     </nav>
 
     <div style="width: 100%; display: flex; text-align: center; align-items: center; margin: 2ex 0;  justify-content: center;">
         <div style="flex: 30%;">
           <br>
           <p class="lead">Gabriel Huang (he/him)</p>
-          <p>PhD, Mila &amp; University of Montreal<br>
-            Research Scientist, ServiceNow</p>
+          <p>Research Scientist @ ServiceNow | LLM Agent Safety, Red-Teaming, Evaluation &amp; Post-Training | PhD ML</p>
         </div>
       <div style="flex: 30%"><img style="border-radius: 50%;" src="id-flower.jpg" width="160" height="160" alt="gabriel huang profile picture"></div>
     </div>
 
+    <br>
 
-    <br><br>
-
-I am a research scientist at <a href="https://github.com/ServiceNow">ServiceNow</a> working on the 
-reliability and security of autonomous AI agents with access to APIs and UIs. 
-My collaborators and I have released <a href="https://servicenow.github.io/DoomArena/">DoomArena</a>, a framework for agentic security. 
-Previously, we worked on synthetic dialogue generation for AI agent distillation and evaluation, simulated users, 
-company APIs and policies, with an emphasis on rigourous evaluation of our systems using both human labelers and LLM-as-a-Judge, 
-resulting in the release of the <a href=
-"https://github.com/ServiceNow/tapeagents">TapeAgents</a> agentic framework.
-
-I did my PhD at <a href="https://mila.quebec/en/">Mila Quebec AI Institute, Université de Montréal </a> with 
-<a href="http://www.iro.umontreal.ca/~slacoste/">Simon Lacoste-Julien</a>.
-I interned at <b>Google Research</b> working on multimodal pretraining for video captioning.
-I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupélec</b>, where I specialized in machine learning, computer vision and statistics.
-   
-<!-- 
-    <p><b>Update March 2022</b>: I am looking for a full-time position to pursue research on <b>Responsible&nbsp;AI</b>.<br>
-      <i>Topics of interest: impact of AI on human behavior and social dynamics,
-      ethical and emotional AI,
-      aligning AI with humanist values,
-      self-supervised and low-data learning, 
-      multimodal transformers, 
-      and large language models.
-    </i>
+    <p>
+    I build safety, evaluation, and post-training systems for LLM agents that use tools, APIs, browsers, and enterprise UIs.
+    At <a href="https://github.com/ServiceNow">ServiceNow Research</a>, my work spans three areas:
     </p>
-
-    <p><u>Aligning AI with technical goals</u> was a central theme of my PhD thesis,
-      during which I have developed technical skills on multimodal language models, self-supervised and few-shot learning, object detection, optimal transport and generative learning.
-      Now, I want to apply these technical skills to develop responsible and ethical AI <u>aligned with humanist values</u>, 
-      not only to ensure that individuals are treated fairly,
-      but also to strengthen the core values of our societies (e.g. human life, truth, democracy, sustainability).
-      I have recently started <a href="https://naivepsychology.com/">Naive Psychology</a>, a blog to share my ideas on the interplay between AI, human behavior and society.
+    <ul>
+      <li><strong>Red-teaming &amp; agent security:</strong> I co-created <a href="https://servicenow.github.io/DoomArena/">DoomArena</a> (COLM&nbsp;2025), a framework for testing both web agents and tool-calling agents against evolving prompt-injection attacks, and placed <strong>6th</strong> at the Microsoft LLMail-Inject international prompt-injection challenge (2025). I also co-designed attacks to drive rigorous evaluation of prompt-injection defenses, including simple firewall approaches for tool-calling agents (<a href="https://arxiv.org/abs/2510.05244">Indirect Prompt Injections</a>, NeurIPS Workshop&nbsp;2025).</li>
+      <li><strong>Evaluation design:</strong> I co-designed end-to-end evaluation pipelines — rubric design, annotator workflows, LLM-as-a-Judge calibration, custom data authoring tool for linguists, and joint utility/safety reporting — as applied in <a href="https://servicenow.github.io/DoomArena/">DoomArena</a> and the <a href="https://github.com/ServiceNow/tapeagents">TapeAgents</a> framework.</li>
+      <li><strong>Post-training &amp; distillation:</strong> I built teacher-student distillation pipelines compressing expensive multi-node Teacher agents into Llama-3.1-8B Students matching GPT-4o at ~300&times; lower inference cost, using SFT and RLHF loops combining human labelers and LLM-as-a-Judge, distilled and evaluated over synthetic environments with simulated users, company APIs, and policy constraints.</li>
+    </ul>
+    <p>
+    I am strongest at the intersection of research and implementation: designing attack and evaluation harnesses, building annotator workflows, calibrating LLM-as-a-Judge systems, and turning research ideas into reusable tools.
+    I am especially interested in making agentic AI systems useful, robust, and safe under realistic deployment conditions.
     </p>
 
     <p>
-      <b>About me</b>: I am a PhD student at <a href="https://mila.quebec/en/">Mila Quebec AI Institute</a> advised by <a
-        href="http://www.iro.umontreal.ca/~slacoste/">Simon Lacoste-Julien</a>.
-      Currently, I am a visiting researcher at <b>ServiceNow</b> (ElementAI)
-      working on few-shot and self-supervised object detection, low-data language models,
-      and self-supervised representations for climate change monitoring.
-      Previously, I was an intern at <b>Google Research</b> working on multimodal pretraining for video captioning.
-      I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupélec</b>, where I specialized in machine learning, computer vision and statistics.
-    </p> -->
-
-
-      <!-- 
-          Previously he did the <a href="http://www.math.ens-cachan.fr/version-francaise/formations/master-mva/contenus-/master-mva-cours-2016-2017-161721.kjsp?RH=1242430202531">MVA Master's degree</a>
-          in machine learning at  École Normale Supérieure in Paris,
-          in parallel with an engineer's degree at CentraleSupélec,
-          one of the top engineering schools in France.
-          While he was doing his master's, I also worked as a part-time research apprentice on
-          human activity recognition using RGB-D cameras and on recommender systems.
-          -->
+    I did my PhD at <a href="https://mila.quebec/en/">Mila, Université de Montréal</a> with
+    <a href="http://www.iro.umontreal.ca/~slacoste/">Simon Lacoste-Julien</a>.
+    During my PhD I interned at <strong>Google Research</strong>, where I led <a href="https://arxiv.org/abs/2011.11760">multimodal pretraining for dense video captioning</a> on YouTube-scale instructional video, processing terabyte-scale corpora and achieving state-of-the-art on dense video captioning (AACL-IJCNLP 2020).
+    I hold two MSc. from <strong>École Normale Supérieure</strong> and <strong>CentraleSupélec</strong> (ranked 1st of 500 graduates).
+    Canadian PR based in Montréal. Native French, bilingual English, fluent everyday Mandarin.
     </p>
+
+    <h4>Skills &amp; Stack</h4>
+    <p>
+      PyTorch &middot; HuggingFace (transformers, PEFT, TRL) &middot; DeepSpeed &middot; Accelerate &middot; LLaMA-Factory &middot; 
+      SFT / RLHF &middot; LLM-as-a-Judge &middot; rubric-based human eval &middot; synthetic data pipelines &middot; 
+      Agent frameworks (TapeAgents, BrowserGym) &middot; red-teaming / prompt-injection tooling &middot; 
+      Distributed LLM training &middot; multi-VM network simulation (KVM/QEMU)
+    </p>
+
     <h4> <a name="publications">Publications</a> </h4>
 
-    See <a href="https://scholar.google.com/citations?user=_X1Tl-MAAAAJ&hl=fr">google scholar</a> for my most recent publications.
+    See <a href="https://scholar.google.com/citations?user=_X1Tl-MAAAAJ&hl=fr">Google Scholar</a> for my most recent publications.
+
+    <br><br>
 
     <div class="papers">
+      <div>
+        <div class="img">
+          <img src="img/firewall.jpg" onerror="this.style.display='none'">
+        </div>
+        <div class="text">
+          <span class="badge badge-success">paper</span>
+          <span class="pt"><a href="https://arxiv.org/abs/2510.05244">Indirect Prompt Injections: Are Firewalls All You Need, or Stronger Benchmarks?</a></span> <br>
+          Rishika Bhagwatkar, Kevin Kasa, Abhay Puri, Gabriel Huang, Irina Rish, Graham W. Taylor, Krishnamurthy Dvijotham, Alexandre Lacoste<br>
+          NeurIPS Workshop 2025.<br>
+          <div class="btn-group">
+            <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2510.05244" role="button">arXiv</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://firewall-defenses.github.io/" role="button">project page</a>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="img">
+          <img src="img/doomarena.jpg" onerror="this.style.display='none'">
+        </div>
+        <div class="text">
+          <span class="badge badge-success">paper</span>
+          <span class="pt"><a href="https://servicenow.github.io/DoomArena/">DoomArena: A Framework for Testing AI Agents Against Evolving Security Threats</a></span> <br>
+          Léo Boisvert, Mihir Bansal, Chandra Kiran Reddy Evuru, Gabriel Huang, Abhay Puri, Avinandan Bose, Maryam Fazel, Quentin Cappart, Jason Stanley, Alexandre Lacoste, Alexandre Drouin, Krishnamurthy Dvijotham<br>
+          COLM 2025.<br>
+          <div class="btn-group">
+            <a class="btn btn-outline-secondary btn-sm" href="https://github.com/ServiceNow/DoomArena" role="button">GitHub</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://colab.research.google.com/github/ServiceNow/DoomArena/blob/main/notebooks/doomarena_intro_notebook.ipynb" role="button">Colab</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2504.14064" role="button">paper</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://servicenow.github.io/DoomArena/" role="button">project page</a>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="img">
+          <img src="img/tapeagents.jpg" onerror="this.style.display='none'">
+        </div>
+        <div class="text">
+          <span class="badge badge-secondary">arXiv</span>
+          <span class="pt"><a href="https://arxiv.org/abs/2412.08445">TapeAgents: A Holistic Framework for Agent Development and Optimization</a></span> <br>
+          Dzmitry Bahdanau, Nicolas Gontier, Gabriel Huang, Ehsan Kamalloo, Rafael Pardinas, Alex Piché, Torsten Scholak, Oleh Shliazhko, Jordan Prince Tremblay, Karam Ghanem, Soham Parikh, Mitul Tiwari, Quaizar Vohra<br>
+          Tech Report.<br>
+          <div class="btn-group">
+            <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2412.08445" role="button">arXiv</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://github.com/ServiceNow/tapeagents" role="button">code</a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="img">
+          <img src="img/geobench.jpg" onerror="this.style.display='none'">
+        </div>
+        <div class="text">
+          <span class="badge badge-success">paper</span>
+          <span class="pt"><a href="https://arxiv.org/abs/2306.03831">Geo-Bench: Toward Foundation Models for Earth Monitoring</a></span> <br>
+          Alexandre Lacoste, Nils Lehmann, Pau Rodriguez, Evan David Sherwin, Hannah Kerner, Björn Lütjens, Jeremy Andrew Irvin, David Dao, Hamed Alemohammad, Alexandre Drouin, Mehmet Gunturkun, Gabriel Huang, David Vazquez, Dava Newman, Yoshua Bengio, Stefano Ermon, Xiao Xiang Zhu<br>
+          NeurIPS 2023 (Datasets &amp; Benchmarks).<br>
+          <div class="btn-group">
+            <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2306.03831" role="button">arXiv</a>
+          </div>
+        </div>
+      </div>
       <div>
         <div class="img">
           <img src="img/fsod.jpg">
         </div>
         <div class="text">
-          <span class="badge badge-secondary">arxiv</span>
+          <span class="badge badge-success">paper</span>
           <span class="pt"><a href="https://gabrielhuang.github.io/fsod-survey/">A Survey of Self-Supervised and
               Few-Shot Object Detection</a></span> <br>
           Gabriel Huang, Issam Laradji, David Vazquez, Simon Lacoste-Julien, Pau Rodriguez<br>
-          Submitted to IEEE TPAMI.<br>
+          IEEE TPAMI 2022.<br>
           <div class="btn-group">
             <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2110.14711" role="button">arXiv</a>
             <a class="btn btn-outline-secondary btn-sm" href="https://gabrielhuang.github.io/fsod-survey/"
@@ -163,7 +199,7 @@ I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupél
               Out-of-domain Few-Shot Learning</a>
           </span> <br>
           Namyeong Kwon, Hwidong Na, Gabriel Huang, Simon Lacoste-Julien<br>
-          ICLR'21 paper.<br>
+          ICLR'21.<br>
           <div class="btn-group">
             <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2103.09027" role="button">arXiv</a>
             <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/pdf/2103.09027.pdf"
@@ -185,7 +221,7 @@ I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupél
           Gabriel Huang, Bo Pang, Zhenhai Zhu, Clara Rivera, Radu Soricut<br>
           <i>Introduces the Video Timeline Tags dataset (<a
               href="https://github.com/google-research-datasets/Video-Timeline-Tags-ViTT">ViTT</a>).</i> <br>
-          AACL-IJCNLP 2020.<br>
+          AACL-IJCNLP 2020. <em>Google Research.</em><br>
           <div class="btn-group">
             <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2011.11760" role="button">arXiv</a>
             <a class="btn btn-outline-secondary btn-sm"
@@ -304,12 +340,9 @@ I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupél
           <p>(b) Eigenvalues in complex plane.
         </svg>
       </div>
-
-
     </div>
 
     <h5></h5>
-
 
     <p><u class="sgd">SGD without momentum:</u> using <span class="snm-span p_lr b"></span>,
       eigenvalues are <span class="p_sgd_inside b"></span> the convergence ball &rarr; <span
@@ -320,8 +353,6 @@ I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupél
       eigenvalues are <span class="p_momentum_inside b"></span> the convergence ball &rarr; <span
         class="b p_momentum_converges"></span>
     </p>
-
-
 
     <script>
       $(document).ready(function () {
@@ -369,8 +400,7 @@ I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupél
       Jae, Joao, Liam, Rémi, Rosemary, Shawn, Sina, and Xing for scribbling all those samples!</p>
 
 
-
-    <h4><a name="thin">Twitter Feed</a></h4>
+    <h4><a name="twitter">Twitter Feed</a></h4>
     <!-- Twitter Feed -->
     <a class="twitter-timeline" data-width="600" data-height="800"
       href="https://twitter.com/GabrielHuang9?ref_src=twsrc%5Etfw">Tweets by GabrielHuang9</a>
@@ -380,7 +410,7 @@ I also hold two MSc. from <b>Ecole Normale Supérieure</b> and <b>CentraleSupél
     <h4>Contact</h4>
 
     <p>Email: <a href="mailto:gbxhuang@gmail.com">gbxhuang@gmail.com</a><br>
-      In person: Mila, 6666 St-Urbain, #200, Montreal, QC, H2S 3H1, Canada
+      Montreal, QC, Canada
     </p>
 
 </body>
