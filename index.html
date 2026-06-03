@@ -74,7 +74,7 @@
     At <a href="https://github.com/ServiceNow">ServiceNow Research</a>, my work spans three areas:
     </p>
     <ul>
-      <li><strong>Red-teaming &amp; agent security:</strong> I co-created <a href="https://servicenow.github.io/DoomArena/">DoomArena</a> (COLM&nbsp;2025), a framework for testing both web agents and tool-calling agents against evolving prompt-injection attacks, and placed <strong>6th</strong> at the Microsoft LLMail-Inject international prompt-injection challenge (2025). I also co-designed attacks to drive rigorous evaluation of prompt-injection defenses, including simple firewall approaches for tool-calling agents (<a href="https://arxiv.org/abs/2510.05244">Indirect Prompt Injections</a>, NeurIPS Workshop&nbsp;2025).</li>
+      <li><strong>Red-teaming &amp; agent security:</strong> I co-created <a href="https://servicenow.github.io/DoomArena/">DoomArena</a> (COLM&nbsp;2025), a framework for testing both web agents and tool-calling agents against evolving prompt-injection attacks, and placed <strong>6th</strong> at the Microsoft LLMail-Inject international prompt-injection challenge (2025). I also co-designed attacks to drive rigorous evaluation of prompt-injection defenses, including simple firewall approaches for tool-calling agents (<a href="https://arxiv.org/abs/2510.05244">Indirect Prompt Injections</a>, NeurIPS Workshop&nbsp;2025). Most recently, we discovered that a small, open-weight AI model — freely available online — is sufficient to power an <a href="#llmworm-paper">AI computer worm</a> that autonomously adapts its attack to each machine it encounters (<a href="https://arxiv.org/abs/2606.03811">arXiv</a>, <a href="https://www.nytimes.com/2026/06/02/technology/scientists-find-way-to-supercharge-dangerous-computer-worms-with-ai.html">NYT</a>, <a href="https://www.scientificamerican.com/article/scientists-just-built-a-powerful-ai-computer-worm-that-learns-as-it-spreads/">Scientific American</a>).</li>
       <li><strong>Evaluation design:</strong> I co-designed end-to-end evaluation pipelines — rubric design, annotator workflows, LLM-as-a-Judge calibration, custom data authoring tool for linguists, and joint utility/safety reporting — as applied in <a href="https://servicenow.github.io/DoomArena/">DoomArena</a> and the <a href="https://github.com/ServiceNow/tapeagents">TapeAgents</a> framework.</li>
       <li><strong>Post-training &amp; distillation:</strong> I built teacher-student distillation pipelines compressing expensive multi-node Teacher agents into Llama-3.1-8B Students matching GPT-4o at ~300&times; lower inference cost, using SFT and RLHF loops combining human labelers and LLM-as-a-Judge, distilled and evaluated over synthetic environments with simulated users, company APIs, and policy constraints.</li>
     </ul>
@@ -106,6 +106,25 @@
     <br><br>
 
     <div class="papers">
+      <div>
+        <div class="img">
+          <img src="img/llmworm.png" onerror="this.style.display='none'">
+        </div>
+        <div class="text">
+          <span class="badge badge-secondary">preprint</span>
+          <a name="llmworm-paper"></a><span class="pt"><a href="https://arxiv.org/abs/2606.03811">AI Agents Enable Adaptive Computer Worms</a></span> <br>
+          Jonas Guan*, Tom Blanchard*, Hanna Foerster*, Hengrui Jia*, Gabriel Huang, Nicolas Papernot<br>
+          arXiv 2026.<br>
+          <div class="btn-group">
+            <a class="btn btn-outline-secondary btn-sm" href="https://arxiv.org/abs/2606.03811" role="button">arXiv</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://www.nytimes.com/2026/06/02/technology/scientists-find-way-to-supercharge-dangerous-computer-worms-with-ai.html" role="button">New York Times</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://www.scientificamerican.com/article/scientists-just-built-a-powerful-ai-computer-worm-that-learns-as-it-spreads/" role="button">Scientific American</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://fortune.com/2026/06/03/a-new-ai-powered-computer-worm-could-prove-to-be-the-stuff-of-cybersecurity-nightmares/" role="button">Fortune</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://www.utoronto.ca/news/u-t-researchers-demonstrate-ai-worm-could-target-any-online-device" role="button">UofT</a>
+            <a class="btn btn-outline-secondary btn-sm" href="https://x.com/GabrielHuang9/status/2062247337271959924?s=20" role="button">tweetorial</a>
+          </div>
+        </div>
+      </div>
       <div>
         <div class="img">
           <img src="img/firewall.jpg" onerror="this.style.display='none'">
